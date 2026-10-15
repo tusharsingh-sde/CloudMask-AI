@@ -14,8 +14,8 @@ import urllib.request
 import json
 
 # ──────────── Configuration ────────────
-REPO_OWNER = "OWNER"        # ← Replace with your GitHub username
-REPO_NAME = "CloudMask-AI"  # ← Replace with your repo name
+REPO_OWNER = "tusharsingh-sde"
+REPO_NAME = "CloudMask-AI"
 MODEL_FILENAME = "cloudmask_unet_best.pt"
 
 def get_latest_release_url():
