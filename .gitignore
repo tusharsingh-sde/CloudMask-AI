@@ -1,0 +1,49 @@
+# ─────────────────────── Python ───────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ─────────────────────── Virtual Environment ───────────────────────
+.venv/
+venv/
+env/
+
+# ─────────────────────── Model Checkpoints (too large for Git) ───────────────────────
+*.pt
+*.pth
+*.onnx
+*.bin
+
+# ─────────────────────── Dataset (too large for Git) ───────────────────────
+38-Cloud_training/
+38-Cloud_test/
+
+# ─────────────────────── IDE / Editor ───────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.agents/
+
+# ─────────────────────── OS Files ───────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─────────────────────── Streamlit ───────────────────────
+.streamlit/
+
+# ─────────────────────── Logs & Temp ───────────────────────
+*.log
+tmp/
+temp/
+
+# ─────────────────────── Jupyter Notebooks ───────────────────────
+.ipynb_checkpoints/
+
+# ─────────────────────── Distribution / Packaging ───────────────────────
+dist/
+build/
+*.egg-info/
