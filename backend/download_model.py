@@ -61,9 +61,12 @@ def download_with_progress(url, dest_path):
     print(f"\n✅ Saved to: {dest_path}")
 
 def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    dest_path = os.path.join(script_dir, MODEL_FILENAME)
+
     # Check if model already exists
-    if os.path.exists(MODEL_FILENAME):
-        print(f"✅ {MODEL_FILENAME} already exists ({os.path.getsize(MODEL_FILENAME) / (1024*1024):.1f} MB)")
+    if os.path.exists(dest_path):
+        print(f"✅ {MODEL_FILENAME} already exists ({os.path.getsize(dest_path) / (1024*1024):.1f} MB)")
         
         overwrite = input("   Download again? (y/N): ").strip().lower()
         if overwrite != "y":
@@ -85,12 +88,12 @@ def main():
     print(f"🏷️  Release: {tag}")
     
     try:
-        download_with_progress(url, MODEL_FILENAME)
+        download_with_progress(url, dest_path)
     except Exception as e:
         print(f"\n❌ Download failed: {e}")
         # Clean up partial file
-        if os.path.exists(MODEL_FILENAME):
-            os.remove(MODEL_FILENAME)
+        if os.path.exists(dest_path):
+            os.remove(dest_path)
         sys.exit(1)
 
 if __name__ == "__main__":

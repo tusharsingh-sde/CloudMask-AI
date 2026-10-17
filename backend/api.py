@@ -52,7 +52,20 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 logger.info(f"Setting up PyTorch device: {device}...")
 
 model = UNet(in_channels=4, out_channels=1).to(device)
-model_path = os.getenv("MODEL_PATH", "cloudmask_unet_best.pt")
+
+def resolve_model_path() -> str:
+    candidates = [
+        os.getenv("MODEL_PATH"),
+        "cloudmask_unet_best.pt",
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "cloudmask_unet_best.pt"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cloudmask_unet_best.pt"),
+    ]
+    for p in candidates:
+        if p and os.path.exists(p):
+            return p
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "cloudmask_unet_best.pt")
+
+model_path = resolve_model_path()
 
 checkpoint_meta = {}
 if os.path.exists(model_path):

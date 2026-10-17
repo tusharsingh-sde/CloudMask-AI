@@ -11,13 +11,16 @@ from model import UNet
 # 1. Hardware Speed Boosters
 torch.backends.cudnn.benchmark = True  # Auto-tunes convolution algorithms for fixed 384x384 input size
 
-# 2. Auto-detect Dataset Path (Works on both Local PC and Kaggle)
+# 2. Auto-detect Dataset Path (Works on Local PC, inside backend/, and Kaggle)
 DATA_DIR = "38-Cloud_training"
 if not os.path.exists(DATA_DIR):
-    for root, dirs, files in os.walk("/kaggle/input"):
-        if "train_red" in dirs:
-            DATA_DIR = root
-            break
+    if os.path.exists(os.path.join("..", "38-Cloud_training")):
+        DATA_DIR = os.path.join("..", "38-Cloud_training")
+    else:
+        for root, dirs, files in os.walk("/kaggle/input"):
+            if "train_red" in dirs:
+                DATA_DIR = root
+                break
 
 # 3. Turbo Hyperparameters
 LEARNING_RATE = 3e-4  # Slightly higher LR for larger batch size

@@ -122,7 +122,8 @@ python -m venv .venv
 # Linux / macOS:
 source .venv/bin/activate
 
-# 3. Install Python dependencies
+# 3. Navigate to backend and install dependencies
+cd backend
 pip install -r requirements.txt
 
 # 4. Download pre-trained checkpoint (if not already present)
@@ -235,25 +236,29 @@ The frontend application provides:
 ```
 CloudMask-AI/
 │
-├── model.py              # U-Net architecture definition
-├── dataset.py            # 38-Cloud dataset loader (4-band + ground truth)
-├── train.py              # Training loop (AMP, multi-GPU, checkpointing)
-├── api.py                # Hardened FastAPI REST API for inference
-├── download_model.py     # Auto-download model from GitHub Releases
-├── requirements.txt      # Python dependencies
-├── .gitignore            # Git exclusions (models, datasets, venv, node_modules)
-├── README.md             # Project documentation
+├── backend/              # FastAPI Python service & PyTorch ML pipeline
+│   ├── api.py            # Hardened REST API for inference
+│   ├── model.py          # U-Net architecture definition
+│   ├── dataset.py        # 38-Cloud dataset loader (4-band + ground truth)
+│   ├── train.py          # Training loop (AMP, multi-GPU, checkpointing)
+│   ├── download_model.py # Auto-download model checkpoint from GitHub Releases
+│   ├── requirements.txt  # Python backend dependencies
+│   └── README.md         # Backend documentation
 │
-└── frontend/             # Modern React 19 + Three.js application
-    ├── src/
-    │   ├── components/   # EarthScene, LandingPage, ProcessingDashboard, ResultViewer, Sidebar
-    │   ├── constants/    # Satellite band definitions
-    │   ├── services/     # API client with health checks & timeouts
-    │   ├── App.jsx       # State & workflow coordinator
-    │   └── App.css       # Deep-space neon styling
-    ├── index.html
-    ├── package.json
-    └── vite.config.js    # Reverse proxy configuration
+├── frontend/             # Modern React 19 + Three.js web application
+│   ├── src/
+│   │   ├── components/   # EarthScene, LandingPage, ProcessingDashboard, ResultViewer, Sidebar
+│   │   ├── constants/    # Satellite band definitions
+│   │   ├── services/     # API client with health checks & timeouts
+│   │   ├── App.jsx       # State & workflow coordinator
+│   │   └── App.css       # Deep-space neon styling
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js    # Reverse proxy configuration
+│   └── README.md         # Frontend documentation
+│
+├── .gitignore            # Git exclusions (models, datasets, venv, node_modules)
+└── README.md             # Master project documentation
 ```
 
 ---
