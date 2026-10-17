@@ -7,12 +7,14 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.143-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.66-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![Three.js](https://img.shields.io/badge/Three.js-0.186-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
 *Pixel-level cloud detection in Landsat 8 multispectral satellite imagery using a U-Net architecture trained on the 38-Cloud dataset.*
 
-[Getting Started](#-getting-started) · [Architecture](#-architecture) · [API Reference](#-api-reference) · [Demo](#-demo) · [Contributing](#-contributing)
+[Getting Started](#-getting-started) · [Architecture](#-architecture) · [API Reference](#-api-reference) · [Frontend](#-frontend-dashboard) · [Contributing](#-contributing)
 
 </div>
 
@@ -27,7 +29,7 @@
 - [Getting Started](#-getting-started)
 - [Training](#-training)
 - [API Reference](#-api-reference)
-- [Demo](#-demo)
+- [Frontend Dashboard](#-frontend-dashboard)
 - [Project Structure](#-project-structure)
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
@@ -42,9 +44,8 @@ CloudMask AI is an end-to-end deep learning pipeline for **automatic cloud detec
 
 This project provides:
 - A **trained U-Net model** that segments clouds at pixel level from 4-band (Red, Green, Blue, NIR) Landsat 8 patches
-- A **REST API** for integrating cloud detection into any application
-- A **Streamlit testing interface** for visual inspection and rapid prototyping
-- A **web frontend** (coming soon) for production deployment
+- A **hardened FastAPI REST API** for low-latency in-memory inference with DoS protection
+- A **modern React 19 + Three.js frontend** featuring real-time 3D Earth orbital simulation and multispectral analysis dashboard
 
 ---
 
@@ -55,57 +56,31 @@ This project provides:
 | 🧠 **U-Net Segmentation** | Custom encoder-decoder architecture with skip connections for precise pixel-level cloud masks |
 | ⚡ **Mixed Precision Training** | FP16 training with `torch.amp` for 2x faster training and lower VRAM usage |
 | 🔥 **Multi-GPU Support** | Automatic `DataParallel` scaling across multiple GPUs |
-| 🌐 **REST API** | FastAPI backend with async image processing |
-| 🖥️ **Streamlit UI** | Interactive testing dashboard with mask overlay visualization |
-| 📊 **Cloud Coverage Stats** | Quantitative cloud coverage percentage per image |
-| 🌡️ **Probability Heatmaps** | Confidence visualization beyond binary masks |
+| 🌐 **Secure REST API** | FastAPI backend with reverse proxy support, strict CORS, and in-memory multi-depth image decoding |
+| 🛰️ **3D Orbital WebGL Frontend** | Interactive Three.js space simulation with live satellites and responsive telemetry |
+| 🖼️ **Multi-View Imagery** | True-Color RGB composite, binary mask, neon magenta overlay, and continuous Magma heatmaps |
+| 📊 **Cloud Coverage Stats** | Quantitative cloud coverage %, clear sky %, pixel counts, and latency metrics |
 | 💾 **Smart Checkpointing** | Per-epoch, latest, and best model saves with full resume support |
-| 🔄 **Cross-Platform** | Runs on Windows, Linux, and Kaggle environments |
+| 🔄 **Cross-Platform** | Seamless execution on Windows, Linux, and Cloud environments |
 
 ---
 
 ## 🏗 Architecture
-
-### Model — U-Net
-
-```
-Input (4, 384, 384)          Output (1, 384, 384)
-   │                              ▲
-   ▼                              │
-┌──────────┐                ┌──────────┐
-│ Encoder  │───Skip Conn───▸│ Decoder  │
-│ 64→128   │                │ 128→64   │
-│ →256→512 │                │ 256→128  │
-└────┬─────┘                └────┬─────┘
-     │                           ▲
-     ▼                           │
-  ┌──────────────────────────────┐
-  │     Bottleneck (1024)        │
-  └──────────────────────────────┘
-```
-
-- **Input**: 4-channel image (Red, Green, Blue, NIR) — 384×384 patches
-- **Encoder**: 4 downsampling blocks with `DoubleConv` (Conv → BN → ReLU × 2) + MaxPool
-- **Bottleneck**: 1024-channel feature representation
-- **Decoder**: 4 upsampling blocks with `ConvTranspose2d` + skip connections
-- **Output**: Single-channel binary cloud mask (logits)
-
-### System Architecture
 
 ```
 ┌────────────────────────────────────────────────────────┐
 │                    CloudMask AI                        │
 ├──────────────┬──────────────┬──────────────────────────┤
 │  Frontend    │   Backend    │     ML Pipeline          │
-│  (Coming     │   FastAPI    │                          │
-│   Soon)      │   REST API   │  Dataset → Train → Model │
-│              │              │                          │
-│  React /     │  /predict    │  38-Cloud   UNet   .pt   │
-│  Next.js     │  /health     │  Dataset    FP16   Ckpt  │
-├──────────────┤              ├──────────────────────────┤
-│  Streamlit   │              │                          │
-│  Test UI     │◄────────────►│  Inference Engine        │
-└──────────────┴──────────────┴──────────────────────────┘
+│  React 19    │   FastAPI    │                          │
+│  Three.js    │   REST API   │  Dataset → Train → Model │
+│  Vite        │              │                          │
+│              │  /predict    │  38-Cloud   UNet   .pt   │
+│  Dropzones   │  /process    │  Dataset    FP16   Ckpt  │
+│  Telemetry   │  /health     │                          │
+├──────────────┴──────────────┼──────────────────────────┤
+│        Reverse Proxy / CORS │  Inference Engine        │
+└─────────────────────────────┴──────────────────────────┘
 ```
 
 ---
@@ -115,10 +90,10 @@ Input (4, 384, 384)          Output (1, 384, 384)
 | Layer | Technology |
 |---|---|
 | **Deep Learning** | PyTorch, torchvision |
-| **Computer Vision** | OpenCV, PIL |
-| **Backend API** | FastAPI, Uvicorn |
-| **Testing UI** | Streamlit |
-| **Frontend** | React / Next.js *(coming soon)* |
+| **Computer Vision** | OpenCV, PIL, tifffile |
+| **Backend API** | FastAPI, Uvicorn, python-multipart |
+| **Frontend UI** | React 19, Three.js, Lucide Icons, Vanilla CSS |
+| **Build Tool** | Vite, Oxlint |
 | **Training Infra** | CUDA, AMP (Mixed Precision), DataParallel |
 | **Dataset** | [38-Cloud (Landsat 8)](https://github.com/SorourMo/38-Cloud-A-Cloud-Segmentation-Dataset) |
 
@@ -129,42 +104,48 @@ Input (4, 384, 384)          Output (1, 384, 384)
 ### Prerequisites
 
 - Python 3.10+
+- Node.js 18+ & npm
 - CUDA-capable GPU *(recommended for training, CPU works for inference)*
 
-### Installation
+### 1. Backend Setup
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/tusharsingh-sde/CloudMask-AI.git
 cd CloudMask-AI
 
-# 2. Create virtual environment
+# 2. Create and activate virtual environment
 python -m venv .venv
 
-# Windows
+# Windows:
 .venv\Scripts\activate
-
-# Linux / macOS
+# Linux / macOS:
 source .venv/bin/activate
 
-# 3. Install dependencies
+# 3. Install Python dependencies
 pip install -r requirements.txt
 
-# 4. Download the pre-trained model
+# 4. Download pre-trained checkpoint (if not already present)
 python download_model.py
-```
 
-### Quick Start
-
-**Run the Streamlit UI:**
-```bash
-streamlit run app.py
-```
-
-**Run the API server:**
-```bash
+# 5. Start FastAPI Backend
 python api.py
-# Server starts at http://localhost:8000
+# Server runs on http://127.0.0.1:8000
+```
+
+### 2. Frontend Setup
+
+In a new terminal window:
+
+```bash
+cd frontend
+
+# Install Node dependencies
+npm install
+
+# Start Vite development server
+npm run dev
+# Dashboard opens on http://localhost:5173
 ```
 
 ---
@@ -173,44 +154,27 @@ python api.py
 
 ### Dataset Setup
 
-Download the [38-Cloud dataset](https://github.com/SorourMo/38-Cloud-A-Cloud-Segmentation-Dataset) and place it in the project root:
+Download the **38-Cloud** dataset from Kaggle or GitHub:
 
 ```
-CloudMask-AI/
-└── 38-Cloud_training/
-    ├── train_red/
-    ├── train_green/
-    ├── train_blue/
-    ├── train_nir/
-    └── train_gt/
+38-Cloud_training/
+├── train_red/       # Band 4 (Red)
+├── train_green/     # Band 3 (Green)
+├── train_blue/      # Band 2 (Blue)
+├── train_nir/       # Band 5 (Near Infrared)
+├── train_gt/        # Binary cloud masks (ground truth)
+└── training_patches_38-Cloud.csv
 ```
-
-> **Kaggle Users**: The dataset path is auto-detected. No manual setup needed.
 
 ### Run Training
 
 ```bash
+# Default: 20 epochs, batch size 16, auto device selection
 python train.py
+
+# Custom parameters:
+python train.py --epochs 30 --batch_size 32 --lr 0.0005
 ```
-
-**Training Configuration:**
-
-| Parameter | Value | Notes |
-|---|---|---|
-| Optimizer | AdamW | With weight decay 1e-4 |
-| Learning Rate | 3e-4 | Tuned for batch size 32 |
-| Batch Size | 32 (GPU) / 4 (CPU) | Auto-adjusted per device |
-| Epochs | 20 | |
-| Loss Function | BCEWithLogitsLoss | Numerically stable binary cross-entropy |
-| Precision | FP16 (Mixed) | Via `torch.amp.GradScaler` |
-
-**Checkpoints saved after every epoch:**
-
-| File | Description |
-|---|---|
-| `cloudmask_unet_epoch_N.pt` | Per-epoch checkpoint (never overwritten) |
-| `cloudmask_unet_latest.pt` | Most recent epoch (for quick resume) |
-| `cloudmask_unet_best.pt` | Lowest loss model (for deployment) |
 
 ---
 
@@ -219,66 +183,50 @@ python train.py
 ### Health Check
 
 ```http
-GET /
+GET /api/health
 ```
 
 **Response:**
 ```json
 {
-  "status": "CloudMask AI Backend is running!"
+  "status": "online",
+  "service": "CloudMask AI Backend",
+  "device": "cpu",
+  "model_loaded": true,
+  "checkpoint": {
+    "epoch": 11,
+    "best_loss": 0.0958
+  }
 }
 ```
 
-### Predict Cloud Mask
+### Run Prediction
 
 ```http
-POST /predict
+POST /api/predict
 Content-Type: multipart/form-data
 ```
 
-| Parameter | Type | Description |
-|---|---|---|
-| `red` | `file` | Red band image (.tif / .jpg / .png) |
-| `green` | `file` | Green band image |
-| `blue` | `file` | Blue band image |
-| `nir` | `file` | Near-infrared band image |
-
-**Response:**
-```json
-{
-  "status": "success",
-  "cloud_coverage_percentage": 42.37,
-  "message": "Mask generated successfully"
-}
-```
-
-**Example (cURL):**
-```bash
-curl -X POST http://localhost:8000/predict \
-  -F "red=@red_patch_001.TIF" \
-  -F "green=@green_patch_001.TIF" \
-  -F "blue=@blue_patch_001.TIF" \
-  -F "nir=@nir_patch_001.TIF"
-```
+**Parameters:**
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `red` | File | Yes | Band 4 (Red) satellite image (`.tif`, `.png`, `.jpg`) |
+| `green` | File | Yes | Band 3 (Green) satellite image |
+| `blue` | File | Yes | Band 2 (Blue) satellite image |
+| `nir` | File | Yes | Band 5 (NIR) satellite image |
+| `threshold` | Float | No | Confidence threshold (default `0.5`) |
+| `overlay_opacity` | Float | No | Mask opacity (default `0.45`) |
 
 ---
 
-## 🖥 Demo
+## 🖥 Frontend Dashboard
 
-### Streamlit Testing Interface
-
-The built-in Streamlit app provides a visual testing dashboard:
-
-```bash
-streamlit run app.py
-```
-
-**Features:**
-- Upload 4 satellite band images (Red, Green, Blue, NIR)
-- Adjustable cloud confidence threshold
-- Visual outputs: RGB composite, predicted mask, mask overlay
-- Cloud probability heatmap
-- Real-time cloud coverage statistics
+The frontend application provides:
+- **3D Interactive Orbit Visualizer**: Real-time rotating Earth with orbital paths and satellites.
+- **Multi-Band Dropzones**: Drag & drop support for all 4 spectral channels with file validation.
+- **Dual Controls**: Confidence Threshold and Mask Overlay Opacity sliders.
+- **4-Channel View**: Switch seamlessly between Mask Overlay, Binary Mask, RGB Composite, and Magma Heatmap.
+- **Exporting**: One-click high-resolution PNG downloads for any generated visual product.
 
 ---
 
@@ -290,14 +238,22 @@ CloudMask-AI/
 ├── model.py              # U-Net architecture definition
 ├── dataset.py            # 38-Cloud dataset loader (4-band + ground truth)
 ├── train.py              # Training loop (AMP, multi-GPU, checkpointing)
-│
-├── api.py                # FastAPI REST API for inference
-├── app.py                # Streamlit testing UI
-│
+├── api.py                # Hardened FastAPI REST API for inference
 ├── download_model.py     # Auto-download model from GitHub Releases
 ├── requirements.txt      # Python dependencies
-├── .gitignore            # Git exclusions (models, data, venv)
-└── README.md             # You are here
+├── .gitignore            # Git exclusions (models, datasets, venv, node_modules)
+├── README.md             # Project documentation
+│
+└── frontend/             # Modern React 19 + Three.js application
+    ├── src/
+    │   ├── components/   # EarthScene, LandingPage, ProcessingDashboard, ResultViewer, Sidebar
+    │   ├── constants/    # Satellite band definitions
+    │   ├── services/     # API client with health checks & timeouts
+    │   ├── App.jsx       # State & workflow coordinator
+    │   └── App.css       # Deep-space neon styling
+    ├── index.html
+    ├── package.json
+    └── vite.config.js    # Reverse proxy configuration
 ```
 
 ---
@@ -305,47 +261,37 @@ CloudMask-AI/
 ## 🗺 Roadmap
 
 - [x] U-Net model architecture
-- [x] Training pipeline with mixed precision
-- [x] Multi-GPU support (DataParallel)
-- [x] FastAPI inference API
-- [x] Streamlit testing dashboard
+- [x] Training pipeline with mixed precision & DataParallel
+- [x] Hardened FastAPI inference API with DoS protection
 - [x] Model hosting via GitHub Releases
-- [ ] React / Next.js frontend
-- [ ] Mask image return in API response
+- [x] React 19 + Three.js multispectral web frontend
+- [x] Image return (RGB composite, mask overlay, probability heatmap)
 - [ ] Batch prediction endpoint
-- [ ] Model performance metrics (IoU, F1, Precision, Recall)
-- [ ] Docker containerization
-- [ ] Cloud deployment (GCP / AWS)
+- [ ] Docker containerization (`docker-compose`)
+- [ ] Cloud deployment (GCP Cloud Run / AWS ECS)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here's how you can help:
+Contributions are welcome! Please check out the issues or open a pull request.
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
 ## 🙏 Acknowledgements
 
-- **38-Cloud Dataset** — [Sorour Mohajerani et al.](https://github.com/SorourMo/38-Cloud-A-Cloud-Segmentation-Dataset) for the Landsat 8 cloud segmentation dataset
-- **U-Net** — [Ronneberger et al., 2015](https://arxiv.org/abs/1505.04597) for the original U-Net architecture
-
----
-
-<div align="center">
-
-**Built with ❤️ by [Tushar Singh](https://github.com/tusharsingh-sde)**
-
-</div>
+- **38-Cloud Dataset** by Sorour Mohajerani and Parvaneh Saeedi ([Paper](https://arxiv.org/abs/1901.03358))
+- **U-Net Architecture** by Ronneberger et al. ([Paper](https://arxiv.org/abs/1505.04597))
+- **USGS / NASA** for Landsat 8 multispectral imagery

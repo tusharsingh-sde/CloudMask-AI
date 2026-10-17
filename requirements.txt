@@ -5,11 +5,10 @@ numpy==2.5.3
 opencv-python==5.0.0.93
 pillow==12.3.0
 tqdm==4.70.1
+tifffile==2026.9.20
 
 # ─── API (FastAPI) ───
 fastapi==0.143.0
 uvicorn==0.54.0
 python-multipart==0.0.32
-
-# ─── UI (Streamlit) ───
-streamlit==1.66.0
+requests==2.34.2
