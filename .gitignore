@@ -3,47 +3,96 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+.Python
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# ─────────────────────── Virtual Environment ───────────────────────
+# ─────────────────────── Virtual Environments ───────────────────────
 .venv/
 venv/
 env/
+ENV/
+env.bak/
+venv.bak/
 
-# ─────────────────────── Model Checkpoints (too large for Git) ───────────────────────
+# ─────────────────────── Model Checkpoints (Too large for Git) ───────────────────────
 *.pt
 *.pth
 *.onnx
 *.bin
+*.weights
+*.ckpt
+*.h5
 
-# ─────────────────────── Dataset (too large for Git) ───────────────────────
+# ─────────────────────── Satellite Datasets (Gigabytes in size) ───────────────────────
 38-Cloud_training/
 38-Cloud_test/
+*.TIF
+*.tif
+*.tiff
 
-# ─────────────────────── IDE / Editor ───────────────────────
+# ─────────────────────── Node.js & Frontend ───────────────────────
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+dist-ssr/
+frontend/dist-ssr/
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ─────────────────────── Environment Variables & Secrets ───────────────────────
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+*.local
+!frontend/.env.example
+!.env.example
+
+# ─────────────────────── IDE & Editor ───────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .agents/
+*.sublime-project
+*.sublime-workspace
 
-# ─────────────────────── OS Files ───────────────────────
+# ─────────────────────── OS Artifacts ───────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# ─────────────────────── Streamlit ───────────────────────
+# ─────────────────────── Streamlit & Jupyter ───────────────────────
 .streamlit/
-
-# ─────────────────────── Logs & Temp ───────────────────────
-*.log
-tmp/
-temp/
-
-# ─────────────────────── Jupyter Notebooks ───────────────────────
 .ipynb_checkpoints/
 
-# ─────────────────────── Distribution / Packaging ───────────────────────
-dist/
-build/
-*.egg-info/
+# ─────────────────────── Logs & Temporary Files ───────────────────────
+*.log
+logs/
+tmp/
+temp/
