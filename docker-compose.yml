@@ -1,0 +1,40 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        DOWNLOAD_MODEL: "false"
+    container_name: cloudmask-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:8080
+      - MAX_CONCURRENT_INFERENCE=2
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_REQUESTS=25
+      - RATE_LIMIT_WINDOW_SECONDS=60
+      - TRUST_PROXY=true
+    volumes:
+      - ./backend/cloudmask_unet_best.pt:/app/cloudmask_unet_best.pt:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request, os; urllib.request.urlopen('http://127.0.0.1:8000/api/ready', timeout=5)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cloudmask-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

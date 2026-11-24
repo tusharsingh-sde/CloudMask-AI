@@ -43,7 +43,7 @@ class CloudDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Union[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, str]]:
         file_name = self.patch_names[idx]
-        base_id = file_name.replace("red_", "")
+        base_id = file_name.removeprefix("red_")
 
         # File paths for all 4 multispectral channels
         red_path = os.path.join(self.red_dir, file_name)

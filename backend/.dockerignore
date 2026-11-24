@@ -1,0 +1,29 @@
+# Python artifacts & virtual environments
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+.coverage
+htmlcov/
+
+# Tests & temporary files
+tests/
+test_*.py
+*.tmp
+
+# Environment configs
+.env
+.env.*
+!.env.example
+
+# Datasets & training checkpoint spam
+38-Cloud*
+cloudmask_unet_epoch_*.pt
+cloudmask_unet_latest.pt
+
+# Git & IDE
+.git/
+.gitignore
+.vscode/
+.idea/

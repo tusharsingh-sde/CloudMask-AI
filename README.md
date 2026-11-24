@@ -4,9 +4,11 @@
 
 **Automated Multispectral Satellite Cloud Detection & Segmentation with Deep Learning**
 
+[![CI Pipeline](https://github.com/tusharsingh-sde/CloudMask-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/tusharsingh-sde/CloudMask-AI/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.143-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Three.js](https://img.shields.io/badge/Three.js-0.186-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
@@ -14,7 +16,7 @@
 
 *Pixel-level cloud segmentation in Landsat 8 multispectral satellite imagery using a hardened PyTorch U-Net architecture trained on the 38-Cloud dataset.*
 
-[Getting Started](#-getting-started) · [Architecture](#-architecture) · [API Reference](#-api-reference) · [Frontend](#-frontend-workbench) · [Contributing](#-contributing)
+[Getting Started](#-getting-started) · [Architecture](#-architecture) · [API Reference](#-api-reference) · [Frontend](#-frontend-workbench) · [Docker](#-docker--container-deployment) · [Testing](#-automated-testing)
 
 </div>
 
@@ -27,11 +29,13 @@
 - [Architecture](#-architecture)
 - [Tech Stack](#-tech-stack)
 - [Getting Started](#-getting-started)
-- [Training](#-training)
-- [API Reference](#-api-reference)
+- [Docker & Container Deployment](#-docker--container-deployment)
+- [Automated Testing](#-automated-testing)
+- [Training](#-training-pipeline-backendtrainpy)
+- [API Reference & Status Codes](#-api-reference--status-codes)
 - [Frontend Workbench](#-frontend-workbench)
 - [Project Structure](#-project-structure)
-- [Contributing](#-contributing)
+- [Roadmap](#-roadmap)
 - [License](#-license)
 - [Acknowledgements](#-acknowledgements)
 
@@ -92,8 +96,9 @@ This system provides:
 | **Computer Vision** | OpenCV (Headless for Docker/Cloud), Pillow, Tifffile |
 | **Backend API** | FastAPI, Uvicorn, Pydantic v2, Python-Multipart |
 | **Frontend UI** | React 19, Three.js, Lucide Icons, Plus Jakarta Sans, JetBrains Mono |
-| **Tooling & Build** | Vite 8, Oxlint |
+| **Tooling & Build** | Vite 8, Oxlint, Pytest |
 | **Training Pipeline** | CUDA, PyTorch AMP (Mixed Precision), CosineAnnealingLR, DataParallel |
+| **Containers & CI** | Docker, Docker Compose, Nginx, GitHub Actions |
 | **Dataset** | [38-Cloud Landsat 8 Dataset](https://github.com/SorourMo/38-Cloud-A-Cloud-Segmentation-Dataset) |
 
 ---
@@ -106,46 +111,79 @@ This system provides:
 - Node.js 18+ & npm
 - CUDA-capable GPU *(recommended for training; CPU is fully supported for inference)*
 
-### 1. Backend Setup
+### 1. Local Development Setup
 
 ```bash
-# 1. Clone repository
+# Clone repository
 git clone https://github.com/tusharsingh-sde/CloudMask-AI.git
 cd CloudMask-AI
 
-# 2. Create and activate virtual environment
+# Create and activate Python virtual environment
 python -m venv .venv
+# Windows: .venv\Scripts\activate | Linux: source .venv/bin/activate
 
-# Windows:
-.venv\Scripts\activate
-# Linux / macOS:
-source .venv/bin/activate
-
-# 3. Install production dependencies
+# Install backend dependencies
 cd backend
 pip install -r requirements.txt
 
-# 4. Download pre-trained U-Net weights (from GitHub Releases)
+# Download model weights (skips cleanly if already downloaded)
 python download_model.py --skip-existing
 
-# 5. Start API server
+# Start backend server (runs on http://127.0.0.1:8000)
 python api.py
-# Server runs on http://127.0.0.1:8000 (Swagger docs at /docs)
 ```
 
-### 2. Frontend Setup
-
-In a separate terminal:
+In a separate terminal, start the React 19 frontend:
 
 ```bash
 cd frontend
-
-# Install Node dependencies
 npm install
-
-# Start Vite development server
 npm run dev
 # Studio Workbench opens on http://localhost:5173
+```
+
+---
+
+## 🐳 Docker & Container Deployment
+
+### Run Full Stack with Docker Compose
+
+Launch the complete stack (FastAPI backend + Nginx-reverse-proxied React frontend) with a single command:
+
+```bash
+docker compose up --build
+```
+- **Frontend Workbench**: `http://localhost:8080`
+- **Backend API**: `http://localhost:8000` (`http://localhost:8000/docs` for OpenAPI Swagger)
+
+### Standalone Production Backend Container
+
+Build a lean, CPU-optimized container with weights pre-baked:
+
+```bash
+docker build -t cloudmask-backend --build-arg DOWNLOAD_MODEL=true ./backend
+docker run -p 8000:8000 cloudmask-backend
+```
+
+---
+
+## 🧪 Automated Testing
+
+### Run Pytest Backend Suite
+
+The suite executes 19 comprehensive tests verifying radiometric scaling, tiled inference, decompression bomb protection, rate limiting, and pure PyTorch architecture:
+
+```bash
+# Run tests with verbose output
+pytest backend/tests -v
+```
+
+### Run Frontend Lint & Build Checks
+
+```bash
+cd frontend
+npm run lint    # Oxlint check (0 warnings, 0 errors)
+npm run build   # Production Vite bundling
 ```
 
 ---
@@ -209,15 +247,26 @@ The React 19 Ground Station provides:
 ```
 CloudMask-AI/
 │
+├── .github/
+│   └── workflows/
+│       └── ci.yml             # GitHub Actions CI workflow (Pytest + Vite Build)
+│
 ├── backend/
 │   ├── api.py                 # Hardened FastAPI service with tiled inference & rate limiting
 │   ├── model.py               # Pure PyTorch U-Net architecture definition
 │   ├── dataset.py             # 38-Cloud dataset loader (pure PyTorch tensor conversion)
 │   ├── train.py               # Training loop with validation split, AMP, and metrics
 │   ├── download_model.py      # Atomic model downloader with checksum & CI flags
+│   ├── Dockerfile             # Lean CPU-only container definition
+│   ├── .dockerignore          # Docker build exclusions
 │   ├── requirements.txt       # Lean production inference dependencies
 │   ├── requirements-train.txt # Model training dependencies
 │   ├── requirements-dev.txt   # Automated test dependencies
+│   ├── pytest.ini             # Pytest discovery configuration
+│   ├── tests/                 # Automated test suite
+│   │   ├── conftest.py        # Fixtures, test client, and raster factories
+│   │   ├── test_api.py        # REST API endpoints & security tests
+│   │   └── test_ml.py         # PyTorch model & dataset tests
 │   ├── .env.example           # Documented environment variable template
 │   └── README.md              # Backend documentation
 │
@@ -232,12 +281,28 @@ CloudMask-AI/
 │   │   ├── styles/tokens.css        # Deep space design system tokens
 │   │   ├── App.jsx                  # Application state & section tracking
 │   │   └── App.css                  # Tailored aerospace ground station styling
-│   ├── index.html
+│   ├── Dockerfile                   # Multi-stage Nginx container build
+│   ├── nginx.conf                   # Reverse proxy configuration
 │   ├── package.json
-│   └── vite.config.js               # Reverse proxy configuration
+│   └── vite.config.js               # Development proxy configuration
 │
+├── docker-compose.yml               # Local full-stack orchestration
 └── README.md                        # Master project documentation
 ```
+
+---
+
+## 🗺 Roadmap
+
+- [x] U-Net model architecture (Pure PyTorch, zero `torchvision`)
+- [x] Training pipeline with mixed precision, cosine annealing & validation split
+- [x] Hardened FastAPI inference API with rate limiting, tiled inference & DoS guards
+- [x] Automated model release downloader with atomic checksums
+- [x] React 19 + Three.js aerospace ground station workbench (Zero GSAP bugs)
+- [x] Automated Pytest test suite (19 tests covering ML + API)
+- [x] Docker containerization (`backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml`)
+- [x] Continuous Integration (`.github/workflows/ci.yml`)
+- [ ] Cloud deployment (GCP Cloud Run / AWS ECS)
 
 ---
 
