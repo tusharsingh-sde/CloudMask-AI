@@ -16,7 +16,6 @@ from PIL import Image
 from pydantic import BaseModel, Field
 import tifffile
 import torch
-import torchvision.transforms.functional as TF
 import uvicorn
 
 from model import UNet
@@ -443,6 +442,13 @@ def create_overlay(rgb: np.ndarray, mask: np.ndarray, opacity: float = 0.45) -> 
     return np.clip(overlay, 0, 255).astype(np.uint8)
 
 
+def numpy_to_tensor_chw(img_hwc: np.ndarray) -> torch.Tensor:
+    """Convert (H, W, C) uint8 numpy array to (1, C, H, W) float32 tensor in [0.0, 1.0]."""
+    return torch.from_numpy(
+        np.ascontiguousarray(img_hwc.transpose(2, 0, 1))
+    ).float().div_(255.0).unsqueeze(0)
+
+
 def create_tapered_window(tile_size: int, overlap: int) -> np.ndarray:
     """Create a 2D cosine/feathered weight window to smoothly blend overlapping tiles."""
     w1d = np.ones(tile_size, dtype=np.float32)
@@ -483,7 +489,7 @@ def run_tiled_inference(
         else:
             padded = img_stacked
 
-        tensor = TF.to_tensor(padded).unsqueeze(0).to(device)
+        tensor = numpy_to_tensor_chw(padded).to(device)
         with torch.inference_mode():
             output = model(tensor)
             probs = torch.sigmoid(output).squeeze().cpu().numpy()
@@ -528,7 +534,7 @@ def run_tiled_inference(
     for y in y_starts:
         for x in x_starts:
             tile = working_img[y : y + tile_size, x : x + tile_size]
-            tile_tensor = TF.to_tensor(tile).unsqueeze(0).to(device)
+            tile_tensor = numpy_to_tensor_chw(tile).to(device)
 
             with torch.inference_mode():
                 tile_out = model(tile_tensor)
