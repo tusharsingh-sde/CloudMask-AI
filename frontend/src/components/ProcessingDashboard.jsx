@@ -20,6 +20,15 @@ export default function ProcessingDashboard({
   const allFilesUploaded = BANDS.every((band) => files[band.id]);
   const uploadedCount = BANDS.filter((band) => files[band.id]).length;
 
+  const handleReset = () => {
+    Object.keys(fileInputRefs.current).forEach((key) => {
+      if (fileInputRefs.current[key]) {
+        fileInputRefs.current[key].value = "";
+      }
+    });
+    onResetFiles();
+  };
+
   const handleDragOver = (e, bandId) => {
     e.preventDefault();
     setDragOverBand(bandId);
@@ -179,7 +188,7 @@ export default function ProcessingDashboard({
           <button
             type="button"
             className="secondary-button"
-            onClick={onResetFiles}
+            onClick={handleReset}
             disabled={loading || uploadedCount === 0}
           >
             <RotateCcw size={16} />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Download,
   RotateCcw,
@@ -11,16 +11,35 @@ export default function ResultViewer({ result, onNewAnalysis }) {
   const [activeTab, setActiveTab] = useState("overlay");
   const [fullscreenImage, setFullscreenImage] = useState(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setFullscreenImage(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   if (!result) {
     return (
-      <div className="result-panel empty-state">
-        <div className="result-symbol">▧</div>
-        <h2>No Processed Imagery Yet</h2>
-        <p>
-          Submit your 4 satellite bands in the Processing workspace. The deep learning segmentation results will appear here.
+      <div className="result-compact-standby">
+        <div className="standby-status">
+          <span className="standby-pulse-dot" />
+          <span className="standby-title">AWAITING INFERENCE</span>
+        </div>
+        <p className="standby-desc">
+          Upload 4 satellite bands in the Workspace above to generate neural cloud masks, radiometric metrics, and probability heatmaps.
         </p>
-        <button className="launch-button" onClick={onNewAnalysis}>
-          Go to Processing <span>→</span>
+        <button
+          className="standby-btn"
+          onClick={() => {
+            const el = document.getElementById("workspace");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+            if (onNewAnalysis) onNewAnalysis();
+          }}
+        >
+          <span>Go to Workspace ↑</span>
         </button>
       </div>
     );
@@ -203,7 +222,7 @@ export default function ResultViewer({ result, onNewAnalysis }) {
           </div>
           <div className="meta-item">
             <span className="meta-key">Threshold Applied:</span>
-            <span className="meta-val">{metadata.threshold ? `${metadata.threshold * 100}%` : "50%"}</span>
+            <span className="meta-val">{metadata.threshold != null ? `${Math.round(metadata.threshold * 100)}%` : "50%"}</span>
           </div>
           <div className="meta-item">
             <span className="meta-key">Compute Engine:</span>

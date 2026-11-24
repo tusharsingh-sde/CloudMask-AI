@@ -59,7 +59,7 @@ export default function Sidebar({ currentPage, onNavigate, backendHealth }) {
             )}
           </div>
           <small className="status-sub">
-            {isOnline ? `PyTorch ${device.toUpperCase()} · U-Net Ready` : "Waiting for localhost:8000"}
+            {isOnline ? `PyTorch ${device.toUpperCase()} · U-Net Ready` : "Inference Engine Standby"}
           </small>
         </div>
       </div>
