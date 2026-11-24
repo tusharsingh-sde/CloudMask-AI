@@ -1,26 +1,20 @@
-import { useState, useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
-import ProcessingDashboard from "./components/ProcessingDashboard";
-import ResultViewer from "./components/ResultViewer";
+import StudioWorkbench from "./components/StudioWorkbench";
 import { checkBackendHealth, predictCloudMask } from "./services/api";
 import "./App.css";
-
-gsap.registerPlugin(ScrollTrigger);
 
 export default function App() {
   const [activeSection, setActiveSection] = useState("overview");
   const [files, setFiles] = useState({});
   const [result, setResult] = useState(null);
+  const [runHistory, setRunHistory] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [threshold, setThreshold] = useState(0.5);
   const [opacity, setOpacity] = useState(0.45);
   const [backendHealth, setBackendHealth] = useState(null);
-
-  const mainContainerRef = useRef(null);
 
   // Poll backend health on initial load and every 30s
   useEffect(() => {
@@ -40,90 +34,26 @@ export default function App() {
     };
   }, []);
 
-  // GSAP Animations and ScrollTriggers (React 19 StrictMode safe)
+  // Track active section using IntersectionObserver (native, lightweight, zero opacity tampering)
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // 1. Hero Entrance Animation: animate subtle y offset ONLY so opacity is NEVER locked to 0
-      const heroTl = gsap.timeline({ defaults: { ease: "power2.out" } });
-      heroTl
-        .fromTo(
-          ".hero-eyebrow-line",
-          { y: -12 },
-          { y: 0, duration: 0.6, delay: 0.1, clearProps: "all" }
-        )
-        .fromTo(
-          ".hero-title",
-          { y: 18 },
-          { y: 0, duration: 0.7, clearProps: "all" },
-          "-=0.4"
-        )
-        .fromTo(
-          ".hero-description",
-          { y: 14 },
-          { y: 0, duration: 0.55, clearProps: "all" },
-          "-=0.4"
-        )
-        .fromTo(
-          "#hero-launch-btn",
-          { y: 14 },
-          { y: 0, duration: 0.5, clearProps: "all" },
-          "-=0.3"
-        )
-        .fromTo(
-          ".telemetry-chip",
-          { y: 10 },
-          { y: 0, stagger: 0.08, duration: 0.4, clearProps: "all" },
-          "-=0.3"
-        );
-
-      // 2. Parallax and soft fade on hero 3D canvas as user scrolls into workspace
-      gsap.to(".hero-webgl-canvas-container", {
-        scrollTrigger: {
-          trigger: "#overview",
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-        y: 120,
-        opacity: 0.35,
-        ease: "none",
-      });
-
-      // 3. Stagger reveal workspace cards on scroll (guaranteed completion, no opacity zeroing)
-      gsap.fromTo(
-        ".band-card",
-        { y: 25 },
-        {
-          scrollTrigger: {
-            trigger: "#workspace",
-            start: "top 92%",
-            once: true,
-          },
-          y: 0,
-          stagger: 0.08,
-          duration: 0.55,
-          ease: "power2.out",
-          clearProps: "all",
-        }
-      );
-
-      // 4. Track Active Section on Scroll
-      const sections = ["overview", "workspace", "results"];
-      sections.forEach((secId) => {
-        ScrollTrigger.create({
-          trigger: `#${secId}`,
-          start: "top center",
-          end: "bottom center",
-          onEnter: () => setActiveSection(secId),
-          onEnterBack: () => setActiveSection(secId),
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
         });
-      });
+      },
+      { threshold: 0.35 }
+    );
 
-      // 5. Ensure coordinates are up-to-date
-      ScrollTrigger.refresh();
-    }, mainContainerRef);
+    const sections = ["overview", "studio"];
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
 
-    return () => ctx.revert();
+    return () => observer.disconnect();
   }, []);
 
   const scrollToSection = (sectionId) => {
@@ -134,11 +64,8 @@ export default function App() {
     }
   };
 
-  const handleSelectFile = (id, file) => {
-    setFiles((prev) => ({
-      ...prev,
-      [id]: file,
-    }));
+  const handleFilesChange = (updatedFiles) => {
+    setFiles(updatedFiles);
     setError("");
   };
 
@@ -146,6 +73,10 @@ export default function App() {
     setFiles({});
     setResult(null);
     setError("");
+  };
+
+  const handleSelectRun = (historyItem) => {
+    setResult(historyItem);
   };
 
   const handleProcessBands = async (event) => {
@@ -158,16 +89,22 @@ export default function App() {
         threshold,
         overlayOpacity: opacity,
       });
-      setResult(output);
 
-      // Smoothly scroll to results section
-      setTimeout(() => {
-        const resultsEl = document.getElementById("results");
-        if (resultsEl) {
-          resultsEl.scrollIntoView({ behavior: "smooth" });
-          setActiveSection("results");
-        }
-      }, 120);
+      const enrichedOutput = {
+        ...output,
+        id: `run-${Date.now()}`,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+
+      setResult(enrichedOutput);
+      setRunHistory((prev) => [enrichedOutput, ...prev.slice(0, 5)]);
+
+      // Ensure view is on studio workbench
+      const studioEl = document.getElementById("studio");
+      if (studioEl) {
+        studioEl.scrollIntoView({ behavior: "smooth" });
+        setActiveSection("studio");
+      }
     } catch (err) {
       setError(err.message || "Failed to process the satellite bands.");
     } finally {
@@ -176,57 +113,49 @@ export default function App() {
   };
 
   return (
-    <div className="aerospace-app" ref={mainContainerRef}>
-      {/* Sticky Minimal Aerospace Top Navbar */}
+    <div className="ground-station-app">
+      {/* Sticky Glass Topbar (60px) */}
       <Navbar
         activeSection={activeSection}
         onNavigate={scrollToSection}
         backendHealth={backendHealth}
       />
 
-      <main className="aerospace-main-content">
+      <main className="app-main-content">
         {/* Section 1: Hero Overview with 3D Earth */}
-        <HeroSection onLaunchWorkspace={() => scrollToSection("workspace")} />
+        <HeroSection onOpenStudio={() => scrollToSection("studio")} />
 
-        {/* Section 2: Multispectral Processing Workspace */}
-        <section id="workspace" className="aerospace-section workspace-section">
-          <div className="section-container">
-            <ProcessingDashboard
-              files={files}
-              onSelectFile={handleSelectFile}
-              onResetFiles={handleResetFiles}
-              onSubmit={handleProcessBands}
-              loading={loading}
-              error={error}
-              threshold={threshold}
-              setThreshold={setThreshold}
-              opacity={opacity}
-              setOpacity={setOpacity}
-            />
-          </div>
-        </section>
-
-        {/* Section 3: Deep Learning Analysis Results */}
-        <section id="results" className="aerospace-section results-section">
-          <div className="section-container">
-            <ResultViewer
-              result={result}
-              onNewAnalysis={() => scrollToSection("workspace")}
-            />
-          </div>
-        </section>
+        {/* Section 2: Unified Ground-Station Studio Workbench */}
+        <StudioWorkbench
+          files={files}
+          onFilesChange={handleFilesChange}
+          onResetFiles={handleResetFiles}
+          onSubmit={handleProcessBands}
+          loading={loading}
+          error={error}
+          threshold={threshold}
+          setThreshold={setThreshold}
+          opacity={opacity}
+          setOpacity={setOpacity}
+          result={result}
+          runHistory={runHistory}
+          onSelectRun={handleSelectRun}
+          backendHealth={backendHealth}
+        />
       </main>
 
-      {/* Sleek Aerospace Mission-Control Footer */}
-      <footer className="aerospace-footer">
-        <div className="footer-container">
+      {/* Minimal Mission Control Footer */}
+      <footer className="ground-station-footer">
+        <div className="footer-inner">
           <div className="footer-left">
-            <span className="footer-brand">CLOUDMASK AI</span>
-            <span className="footer-sep">·</span>
-            <span className="footer-sub">LANDSAT 8 OLI / TIRS MULTISPECTRAL ENGINE</span>
+            <span className="footer-title">CLOUDMASK AI</span>
+            <span className="footer-sep">/</span>
+            <span className="footer-desc">
+              SATELLITE GROUND STATION & EARTH OBSERVATION WORKBENCH
+            </span>
           </div>
           <div className="footer-right">
-            <span className="footer-telemetry">EPSG:4326 · 38-CLOUD U-NET ARCHITECTURE</span>
+            <span>LANDSAT 8 OLI · EPSG:4326 · 38-CLOUD DATASET</span>
           </div>
         </div>
       </footer>

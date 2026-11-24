@@ -10,7 +10,7 @@ const EARTH_SPECULAR =
 const EARTH_CLOUDS =
   "https://threejs.org/examples/textures/planets/earth_clouds_1024.png";
 
-// Programmatic Atmospheric Halo CanvasTexture (Radial Gradient: 0.42 -> 0.24 -> 0.08 -> 0)
+// Programmatic Radial Atmospheric Halo Texture (Seamless Bloom, No Hard Ring)
 function createAtmosphereHaloTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = 512;
@@ -19,9 +19,8 @@ function createAtmosphereHaloTexture() {
   if (!ctx) return new THREE.Texture();
 
   const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
-  grad.addColorStop(0.0, "rgba(56, 189, 248, 0.42)");
-  grad.addColorStop(0.38, "rgba(14, 165, 233, 0.24)");
-  grad.addColorStop(0.62, "rgba(29, 78, 216, 0.08)");
+  grad.addColorStop(0.0, "rgba(56, 189, 248, 0.36)");
+  grad.addColorStop(0.48, "rgba(37, 99, 235, 0.14)");
   grad.addColorStop(1.0, "rgba(0, 0, 0, 0.0)");
 
   ctx.fillStyle = grad;
@@ -32,7 +31,7 @@ function createAtmosphereHaloTexture() {
   return texture;
 }
 
-// Particle Dot Texture for 3D Wave
+// Particle Dot Texture for Undulating Horizon Wave
 function createParticleDotTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = 64;
@@ -42,8 +41,8 @@ function createParticleDotTexture() {
 
   const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
   grad.addColorStop(0.0, "rgba(255, 255, 255, 1.0)");
-  grad.addColorStop(0.25, "rgba(56, 189, 248, 0.9)");
-  grad.addColorStop(0.65, "rgba(37, 99, 235, 0.35)");
+  grad.addColorStop(0.28, "rgba(56, 189, 248, 0.85)");
+  grad.addColorStop(0.65, "rgba(37, 99, 235, 0.3)");
   grad.addColorStop(1.0, "rgba(0, 0, 0, 0.0)");
 
   ctx.fillStyle = grad;
@@ -54,7 +53,7 @@ function createParticleDotTexture() {
   return texture;
 }
 
-// Fallback texture if remote planet images are blocked
+// Procedural Fallback Texture if remote textures fail
 function createProceduralEarthFallback() {
   const canvas = document.createElement("canvas");
   canvas.width = 512;
@@ -93,12 +92,13 @@ const fresnelVertexShader = `
 const fresnelFragmentShader = `
   varying vec3 vNormal;
   void main() {
-    float f = pow(1.0 - max(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 0.0), 4.0);
-    gl_FragColor = vec4(vec3(0.376, 0.773, 1.0), f * 0.55);
+    float f = pow(1.0 - max(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 0.0), 3.8);
+    // Tinted #7dd3fc (0.49, 0.827, 0.988) at max alpha 0.5
+    gl_FragColor = vec4(vec3(0.49, 0.827, 0.988), f * 0.5);
   }
 `;
 
-// Micro-satellite (small, realistic)
+// Miniature Landsat-style Satellite (~1/14th of globe diameter)
 function createMicroSatellite() {
   const satellite = new THREE.Group();
 
@@ -126,43 +126,43 @@ function createMicroSatellite() {
     color: 0x38bdf8,
   });
 
-  // Central bus
-  const bus = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.12), bodyMaterial);
+  // Central chassis
+  const bus = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.065, 0.11), bodyMaterial);
   satellite.add(bus);
 
-  // Gold telemetry section
-  const goldUnit = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.072, 0.035), goldMaterial);
-  goldUnit.position.z = 0.07;
-  satellite.add(goldUnit);
+  // Gold avionics bay
+  const goldBay = new THREE.Mesh(new THREE.BoxGeometry(0.067, 0.067, 0.032), goldMaterial);
+  goldBay.position.z = 0.065;
+  satellite.add(goldBay);
 
-  // Antenna dish
-  const dish = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.03, 16, 1, true), bodyMaterial);
+  // High gain dish
+  const dish = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.028, 16, 1, true), bodyMaterial);
   dish.rotation.x = Math.PI / 2;
-  dish.position.z = 0.1;
+  dish.position.z = 0.095;
   satellite.add(dish);
 
-  // Solar panels
-  const leftPanel = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 0.006), panelMaterial);
-  leftPanel.position.set(-0.15, 0, 0);
+  // Dual solar wings
+  const leftPanel = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.075, 0.005), panelMaterial);
+  leftPanel.position.set(-0.14, 0, 0);
   satellite.add(leftPanel);
 
-  const rightPanel = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 0.006), panelMaterial);
-  rightPanel.position.set(0.15, 0, 0);
+  const rightPanel = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.075, 0.005), panelMaterial);
+  rightPanel.position.set(0.14, 0, 0);
   satellite.add(rightPanel);
 
-  // Glowing micro beacon
+  // Beacon dot
   const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), beaconMaterial);
-  beacon.position.set(0, 0.045, 0.06);
+  beacon.position.set(0, 0.04, 0.055);
   satellite.add(beacon);
 
   const beaconLight = new THREE.PointLight(0x38bdf8, 0.35, 0.8);
-  beaconLight.position.set(0, 0.045, 0.06);
+  beaconLight.position.set(0, 0.04, 0.055);
   satellite.add(beaconLight);
 
   return satellite;
 }
 
-// Ultra-delicate orbit ring
+// Ultra-delicate orbit path
 function createOrbitRing(radiusX, radiusY, opacity = 0.14) {
   const segments = 128;
   const points = [];
@@ -189,7 +189,7 @@ export default function EarthScene() {
     let width = mount.clientWidth || window.innerWidth;
     let height = mount.clientHeight || window.innerHeight;
 
-    // Three.js Scene & Camera setup
+    // 1. Scene & Perspective Camera
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
     camera.position.set(0, 0, 7.5);
@@ -207,7 +207,7 @@ export default function EarthScene() {
 
     mount.appendChild(renderer.domElement);
 
-    // 1. Star Field (Cosmic Depth)
+    // 2. Star Field
     const starCount = 1200;
     const starPositions = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
@@ -230,30 +230,25 @@ export default function EarthScene() {
     const stars = new THREE.Points(starGeometry, starMaterial);
     scene.add(stars);
 
-    // 2. Realistic Cinematic Lighting
-    // Soft HemisphereLight so dark side reveals subtle oceanic depth without pure black void
-    const hemiLight = new THREE.HemisphereLight(0x93c5fd, 0x0b172a, 1.35);
+    // 3. Balanced Lighting (No blown-out specular, no dead pitch-black dark side)
+    const hemiLight = new THREE.HemisphereLight(0x93c5fd, 0x091324, 1.3);
     scene.add(hemiLight);
 
-    // Key DirectionalLight from upper-front-left (-3.5, 2.5, 5.5)
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.1);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
     keyLight.position.set(-3.5, 2.5, 5.5);
     scene.add(keyLight);
 
-    // Subtle Cyan Rim Light from upper-right-back (4, 2, -3)
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
     rimLight.position.set(4, 2, -3);
     scene.add(rimLight);
 
-    // 3. Earth System Setup (Occupies ~62% of viewport height)
-    // Visible height at distance 7.5 and FOV 35 is ~4.73. 62% is ~2.94 diameter -> Radius = 1.47
-    const EARTH_RADIUS = 1.47;
+    // 4. Earth System (~60% of viewport height: radius = 1.42)
+    const EARTH_RADIUS = 1.42;
     const earthGroup = new THREE.Group();
 
     const textureLoader = new THREE.TextureLoader();
     textureLoader.setCrossOrigin("anonymous");
 
-    // Textures with graceful fallback
     const earthAlbedo = textureLoader.load(
       EARTH_TEXTURE,
       (tex) => {
@@ -270,7 +265,6 @@ export default function EarthScene() {
     const earthNormal = textureLoader.load(EARTH_NORMAL);
     const earthSpecular = textureLoader.load(EARTH_SPECULAR);
 
-    // Earth Mesh - low shininess (6) and dark specular to prevent plastic blown-out highlights
     const earthGeometry = new THREE.SphereGeometry(EARTH_RADIUS, 64, 64);
     const earthMaterial = new THREE.MeshPhongMaterial({
       map: earthAlbedo,
@@ -301,8 +295,7 @@ export default function EarthScene() {
     cloudsMesh.rotation.y = -1.1;
     earthGroup.add(cloudsMesh);
 
-    // 4. Atmosphere Layer 1: Soft Outer Atmospheric Halo (No Hard Edge)
-    // THREE.Sprite positioned behind Earth, scaled ~2.85x Earth radius with smooth radial gradient
+    // 5. Atmospheric Halo Layer 1: Smooth Sprite Radial Bloom (No Hard Ring)
     const haloTexture = createAtmosphereHaloTexture();
     const haloMaterial = new THREE.SpriteMaterial({
       map: haloTexture,
@@ -311,13 +304,12 @@ export default function EarthScene() {
       depthWrite: false,
     });
     const haloSprite = new THREE.Sprite(haloMaterial);
-    haloSprite.scale.set(EARTH_RADIUS * 2.85 * 2, EARTH_RADIUS * 2.85 * 2, 1);
-    haloSprite.position.set(0, 0, -0.06);
+    haloSprite.scale.set(EARTH_RADIUS * 2.9 * 2, EARTH_RADIUS * 2.9 * 2, 1);
+    haloSprite.position.set(0, 0, -0.05);
     earthGroup.add(haloSprite);
 
-    // Atmosphere Layer 2: Thin Inner Fresnel Rim
-    // Sphere radius * 1.015 with custom GLSL Fresnel shader tinted #60c5ff at 0.55 opacity
-    const fresnelGeometry = new THREE.SphereGeometry(EARTH_RADIUS * 1.015, 64, 64);
+    // Atmospheric Halo Layer 2: Subtle GLSL Fresnel Limb Rim
+    const fresnelGeometry = new THREE.SphereGeometry(EARTH_RADIUS * 1.018, 64, 64);
     const fresnelMaterial = new THREE.ShaderMaterial({
       vertexShader: fresnelVertexShader,
       fragmentShader: fresnelFragmentShader,
@@ -331,15 +323,15 @@ export default function EarthScene() {
 
     scene.add(earthGroup);
 
-    // 5. Satellites & Delicate Orbits
+    // 6. Satellites & Orbits
     const orbitGroup = new THREE.Group();
     scene.add(orbitGroup);
 
     const orbitConfigs = [
-      { rx: 2.25, ry: 1.65, rotX: 0.35, rotY: 0.15, rotZ: -0.22, speed: 0.14, angle: 0.8 },
-      { rx: 2.55, ry: 1.95, rotX: 1.12, rotY: -0.25, rotZ: 0.4, speed: 0.10, angle: 2.6 },
-      { rx: 2.38, ry: 1.78, rotX: -0.42, rotY: 0.55, rotZ: 0.18, speed: 0.12, angle: 4.5 },
-      { rx: 2.65, ry: 2.1, rotX: 0.7, rotY: -0.35, rotZ: -0.55, speed: 0.085, angle: 1.5 },
+      { rx: 2.2, ry: 1.6, rotX: 0.35, rotY: 0.15, rotZ: -0.22, speed: 0.14, angle: 0.8 },
+      { rx: 2.5, ry: 1.9, rotX: 1.12, rotY: -0.25, rotZ: 0.4, speed: 0.1, angle: 2.6 },
+      { rx: 2.32, ry: 1.72, rotX: -0.42, rotY: 0.55, rotZ: 0.18, speed: 0.12, angle: 4.5 },
+      { rx: 2.58, ry: 2.05, rotX: 0.7, rotY: -0.35, rotZ: -0.55, speed: 0.085, angle: 1.5 },
     ];
 
     const satelliteEntries = [];
@@ -366,9 +358,9 @@ export default function EarthScene() {
       });
     });
 
-    // 6. Glowing 3D Particle Wave Across Lower Hero (85 x 45 grid)
-    const waveCols = 85;
-    const waveRows = 45;
+    // 7. Subtle 3D Horizon Particle Wave (75 × 40 points)
+    const waveCols = 75;
+    const waveRows = 40;
     const waveCount = waveCols * waveRows;
     const wavePositions = new Float32Array(waveCount * 3);
     const waveColors = new Float32Array(waveCount * 3);
@@ -379,11 +371,11 @@ export default function EarthScene() {
 
     let pIdx = 0;
     for (let r = 0; r < waveRows; r++) {
-      const z = (r / (waveRows - 1)) * 4.8 + 1.0;
+      const z = (r / (waveRows - 1)) * 4.5 + 1.1;
       for (let c = 0; c < waveCols; c++) {
         const x = (c / (waveCols - 1)) * 16.0 - 8.0;
         wavePositions[pIdx * 3] = x;
-        wavePositions[pIdx * 3 + 1] = -1.65;
+        wavePositions[pIdx * 3 + 1] = -1.75;
         wavePositions[pIdx * 3 + 2] = z;
 
         const factor1 = c / waveCols;
@@ -402,18 +394,18 @@ export default function EarthScene() {
 
     const waveDotTexture = createParticleDotTexture();
     const waveMaterial = new THREE.PointsMaterial({
-      size: 0.075,
+      size: 0.065,
       map: waveDotTexture,
       vertexColors: true,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.55,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     const waveMesh = new THREE.Points(waveGeometry, waveMaterial);
     scene.add(waveMesh);
 
-    // Responsive Positioning
+    // Responsive Composition: ~60% height, positioned at ~68–72% width on desktop
     function updateLayout(w, h) {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
@@ -421,16 +413,13 @@ export default function EarthScene() {
 
       const isMobile = w < 960;
       if (isMobile) {
-        // Centered below headline on mobile
-        earthGroup.position.set(0, -0.4, 0);
+        earthGroup.position.set(0, -0.35, 0);
         earthGroup.scale.setScalar(0.75);
         orbitGroup.position.copy(earthGroup.position);
         orbitGroup.scale.setScalar(0.75);
       } else {
-        // Desktop: sits cleanly at ~68-72% across width, vertically centered around y = 0.08
-        // Visible width at z=0 is 4.73 * aspect. At 16:9, width is ~8.4, 70% from left is ~1.68
         const visibleHalfWidth = 2.365 * camera.aspect;
-        const targetX = visibleHalfWidth * 0.42; // places center at ~71% across viewport
+        const targetX = visibleHalfWidth * 0.42; // ~71% across horizontal viewport
         earthGroup.position.set(targetX, 0.08, 0);
         earthGroup.scale.setScalar(1.0);
         orbitGroup.position.copy(earthGroup.position);
@@ -440,7 +429,7 @@ export default function EarthScene() {
 
     updateLayout(width, height);
 
-    // 7. Interactive Physics, Cursor Tracking & Canvas Drag
+    // 8. Physics & Interactive Pointer Tracking (Drag-to-spin with inertia)
     let mouseX = 0;
     let mouseY = 0;
     let isDragging = false;
@@ -449,7 +438,6 @@ export default function EarthScene() {
     let baseAngleY = 0;
 
     const handlePointerMove = (e) => {
-      // Normalized window coordinates (-1 to 1)
       const x = (e.clientX / window.innerWidth) * 2 - 1;
       const y = -(e.clientY / window.innerHeight) * 2 + 1;
       mouseX = Math.max(-1, Math.min(1, x));
@@ -475,7 +463,7 @@ export default function EarthScene() {
     mount.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("pointerup", handlePointerUp);
 
-    // 8. Animation Loop with clock
+    // 9. Animation Loop
     const clock = new THREE.Clock();
     let animId;
 
@@ -484,26 +472,26 @@ export default function EarthScene() {
       const delta = Math.min(clock.getDelta(), 0.08);
       const elapsed = clock.getElapsedTime();
 
-      // Inertia decay for manual spin
+      // Inertia decay
       dragVelocityY *= 0.94;
 
-      // Cursor horizontal influence on rotation direction (left = anticlockwise, right = clockwise)
-      const cursorDrift = mouseX * 0.14 * delta;
+      // Frame-rate independent baseline spin + mouse steer
+      const cursorDrift = mouseX * 0.12 * delta;
       const baseDrift = 0.045 * delta;
       baseAngleY += baseDrift + cursorDrift + dragVelocityY;
 
       earthMesh.rotation.y = baseAngleY;
       cloudsMesh.rotation.y = baseAngleY * 1.15;
 
-      // Smooth pitch and yaw tilt with 0.045 damping
-      const targetPitch = -mouseY * 0.22;
-      const targetYaw = mouseX * 0.26;
+      // Damped tilt lerp (0.045)
+      const targetPitch = -mouseY * 0.2;
+      const targetYaw = mouseX * 0.24;
       earthGroup.rotation.x += (targetPitch - earthGroup.rotation.x) * 0.045;
-      earthGroup.rotation.z += (targetYaw * 0.32 - earthGroup.rotation.z) * 0.045;
+      earthGroup.rotation.z += (targetYaw * 0.3 - earthGroup.rotation.z) * 0.045;
       orbitGroup.rotation.x = earthGroup.rotation.x;
       orbitGroup.rotation.z = earthGroup.rotation.z;
 
-      // Satellite progression
+      // Orbit satellites
       satelliteEntries.forEach((entry) => {
         entry.angle += entry.speed * delta;
         const sx = Math.cos(entry.angle) * entry.rx;
@@ -513,16 +501,16 @@ export default function EarthScene() {
         entry.satellite.rotation.y += 0.01;
       });
 
-      // Layered sine/cosine ripple wave beneath the Earth
+      // Layered sine/cosine ripple wave
       const pArr = waveGeometry.attributes.position.array;
       for (let i = 0; i < waveCount; i++) {
         const px = pArr[i * 3];
         const pz = pArr[i * 3 + 2];
         pArr[i * 3 + 1] =
-          -1.65 +
-          Math.sin(px * 0.42 + elapsed * 1.25) * 0.22 +
-          Math.cos(pz * 0.65 + elapsed * 0.95) * 0.16 +
-          Math.sin((px + pz) * 0.3 + elapsed * 0.7) * 0.08;
+          -1.75 +
+          Math.sin(px * 0.42 + elapsed * 1.25) * 0.2 +
+          Math.cos(pz * 0.65 + elapsed * 0.95) * 0.15 +
+          Math.sin((px + pz) * 0.3 + elapsed * 0.7) * 0.07;
       }
       waveGeometry.attributes.position.needsUpdate = true;
 
@@ -531,7 +519,6 @@ export default function EarthScene() {
 
     animId = requestAnimationFrame(animate);
 
-    // Resize listener
     const handleResize = () => {
       if (!mount) return;
       const w = mount.clientWidth;
@@ -542,7 +529,7 @@ export default function EarthScene() {
     };
     window.addEventListener("resize", handleResize);
 
-    // Clean Memory Disposal on Unmount
+    // Deep Disposal on Unmount (React 19 Safe)
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", handleResize);

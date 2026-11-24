@@ -1,10 +1,10 @@
-import { ArrowRight, ChevronDown, Satellite, Cpu, Layers } from "lucide-react";
+import { ArrowRight, ChevronDown, Cpu, Layers } from "lucide-react";
 import EarthScene from "./EarthScene";
 
-export default function HeroSection({ onLaunchWorkspace }) {
+export default function HeroSection({ onOpenStudio }) {
   return (
     <section id="overview" className="hero-section">
-      {/* Full-bleed 3D WebGL Background Canvas */}
+      {/* Full-Bleed 3D WebGL Canvas */}
       <div className="hero-webgl-canvas-container">
         <EarthScene />
       </div>
@@ -12,68 +12,68 @@ export default function HeroSection({ onLaunchWorkspace }) {
       {/* Hero Foreground Content */}
       <div className="hero-inner">
         <div className="hero-copy-column">
-          {/* Minimal Eyebrow: 28px x 1px cyan line + tracked mono label */}
-          <div className="hero-eyebrow-line">
-            <span className="eyebrow-accent-bar" />
-            <span className="eyebrow-mono-text">LANDSAT 8 · MULTISPECTRAL U-NET ENGINE</span>
+          {/* Minimal 24px Cyan Hairline Eyebrow */}
+          <div className="hero-eyebrow">
+            <span className="eyebrow-line" />
+            <span className="eyebrow-text">LANDSAT 8 · 38-CLOUD U-NET</span>
           </div>
 
-          {/* Crisp Light-Weight 2-Line Editorial Headline */}
-          <h1 className="hero-title">
-            <span className="title-line-white">Clouds obscure the planet.</span>
-            <span className="title-line-cyan">We isolate every pixel.</span>
+          {/* Crisp 2-Line Editorial Headline */}
+          <h1 className="hero-headline">
+            <span className="headline-line-white">See through the clouds.</span>
+            <span className="headline-line-gradient">Resolve every pixel.</span>
           </h1>
 
-          {/* Concise Technical Description */}
-          <p className="hero-description">
-            Sub-pixel multispectral segmentation using synchronized 4-band spectral radiance (Red, Green, Blue, and Near-Infrared) to eliminate atmospheric obscuration and resolve ground radiance.
+          {/* Concise 2-Line Product Pitch */}
+          <p className="hero-pitch">
+            Radiometric deep learning pipeline isolating sub-kilometer cloud formations and shadows across 4 spectral bands in real time with zero disk latency.
           </p>
 
-          {/* Clean, Always-Visible Aerospace CTA Button */}
-          <div className="hero-cta-group">
+          {/* Primary CTA & Secondary Specification Link */}
+          <div className="hero-cta-row">
             <button
-              className="aerospace-cta-btn"
-              onClick={onLaunchWorkspace}
+              className="hero-primary-cta"
+              onClick={onOpenStudio}
               id="hero-launch-btn"
             >
-              <span className="cta-dot" />
-              <span className="cta-label">BEGIN SEGMENTATION</span>
-              <ArrowRight size={15} className="cta-arrow" />
+              <span>Open Segmentation Studio</span>
+              <ArrowRight size={16} className="cta-arrow-icon" />
             </button>
+
+            <div className="hero-specs-badge">
+              <span className="specs-dot" />
+              <span>4 Bands · 384×384 · PyTorch</span>
+            </div>
           </div>
 
-          {/* 3 Compact Monospace Telemetry Chips */}
-          <div className="hero-telemetry-chips">
-            <div className="telemetry-chip">
-              <Satellite size={13} className="chip-icon" />
-              <span>4 SPECTRAL BANDS</span>
+          {/* Micro Telemetry Pills */}
+          <div className="hero-telemetry-row">
+            <div className="telemetry-pill">
+              <Layers size={13} className="pill-icon" />
+              <span>OLI B02–B05 SPECTRAL ARRAYS</span>
             </div>
-            <div className="telemetry-chip">
-              <Cpu size={13} className="chip-icon" />
-              <span>U-NET 38-CLOUD</span>
-            </div>
-            <div className="telemetry-chip">
-              <Layers size={13} className="chip-icon" />
-              <span>IN-MEMORY INFERENCE</span>
+            <div className="telemetry-pill">
+              <Cpu size={13} className="pill-icon" />
+              <span>38-CLOUD WEIGHTS</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Hero Bottom Telemetry & Scroll Indicator */}
+      {/* Hero Bottom Telemetry Bar */}
       <div className="hero-bottom-bar">
-        <div className="hero-orbital-telemetry">
-          <span className="live-coord-pulse" />
-          <span className="mono-readout">ORBITAL SYNC · 384×384 PATCHES</span>
+        <div className="hero-bottom-left">
+          <span className="meta-sync-dot" />
+          <span className="meta-text">OLI BANDS B02–B05 · IN-MEMORY PIPELINE</span>
         </div>
 
         <button
-          className="hero-scroll-btn"
-          onClick={onLaunchWorkspace}
-          aria-label="Scroll to Workspace"
+          className="hero-scroll-cue"
+          onClick={onOpenStudio}
+          aria-label="Scroll to Segmentation Studio"
         >
-          <span className="scroll-text">SCROLL</span>
-          <ChevronDown size={14} className="scroll-chevron" />
+          <span>SCROLL TO STUDIO</span>
+          <ChevronDown size={14} className="cue-chevron" />
         </button>
       </div>
     </section>
