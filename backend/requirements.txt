@@ -1,14 +1,15 @@
-# ─── Core ML ───
+# CloudMask AI - Lean Production Inference Dependencies
+# Core Deep Learning & Tensor Operations (pure PyTorch, no torchvision)
 torch==2.14.1
-torchvision==0.29.1
 numpy==2.5.3
-opencv-python==5.0.0.93
+
+# Geospatial Image Decoding & Validation (Headless for Docker/Cloud compatibility)
+opencv-python-headless==5.0.0.93
 pillow==12.3.0
-tqdm==4.70.1
 tifffile==2026.9.20
 
-# ─── API (FastAPI) ───
+# REST API & Lifespan Server
 fastapi==0.143.0
+pydantic==2.14.0
 uvicorn==0.54.0
 python-multipart==0.0.32
-requests==2.34.2

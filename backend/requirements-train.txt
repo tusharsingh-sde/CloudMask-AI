@@ -1,0 +1,5 @@
+# CloudMask AI - Model Training Dependencies
+-r requirements.txt
+
+# Training Progress Tracking
+tqdm==4.70.1
