@@ -8,7 +8,7 @@
 [![React](https://img.shields.io/badge/React-Vite_+_Three.js-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Compose_+_Nginx-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
-**Live Demo:** `[Add Vercel URL after deployment]` · **Container Registry:** `ghcr.io/tusharsingh-sde/cloudmask-backend`
+**Live Demo:** [https://cloud-mask-ai.vercel.app](https://cloud-mask-ai.vercel.app) · **Container Registry:** `ghcr.io/tusharsingh-sde/cloudmask-backend`
 
 <!-- Drop your 2 best screenshots into docs/screenshots/ and uncomment:
 ![CloudMask AI Workbench — Partial Cloud Split Compare](docs/screenshots/partial-cloud-split.png)
