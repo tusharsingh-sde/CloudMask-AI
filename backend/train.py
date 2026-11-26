@@ -179,13 +179,13 @@ def main():
 
     device = args.device
     num_gpus = torch.cuda.device_count() if device == "cuda" else 0
-    print(f"🚀 Device: {device} | GPUs: {num_gpus} | Dataset: {args.data_dir} | Seed: {args.seed}")
+    print(f"Device: {device} | GPUs: {num_gpus} | Dataset: {args.data_dir} | Seed: {args.seed}")
 
     model = UNet(in_channels=4, out_channels=1)
 
     # Multi-GPU support if running on distributed hardware
     if num_gpus > 1:
-        print(f"🔥 Multi-GPU Activated: DataParallel across {num_gpus} GPUs")
+        print(f"Multi-GPU Activated: DataParallel across {num_gpus} GPUs")
         model = nn.DataParallel(model)
 
     model = model.to(device)
@@ -201,7 +201,7 @@ def main():
     # Resume from checkpoint if specified
     if args.resume:
         if os.path.exists(args.resume):
-            print(f"🔄 Resuming from checkpoint: {args.resume}")
+            print(f"Resuming from checkpoint: {args.resume}")
             checkpoint = torch.load(args.resume, map_location=device)
             raw_model = model.module if isinstance(model, nn.DataParallel) else model
             raw_model.load_state_dict(checkpoint["state_dict"])
@@ -215,12 +215,12 @@ def main():
             best_loss = float(checkpoint.get("best_loss", float("inf")))
             print(f"   Resumed at epoch {start_epoch + 1} with previous best loss {best_loss:.4f}")
         else:
-            print(f"⚠️ Checkpoint file '{args.resume}' not found! Starting fresh training.")
+            print(f"Checkpoint file '{args.resume}' not found! Starting fresh training.")
 
     full_dataset = CloudDataset(root_dir=args.data_dir, is_train=True)
     total_samples = len(full_dataset)
     if total_samples == 0:
-        print(f"⚠️ Warning: No training patches found in '{args.data_dir}'. Please verify data directory.")
+        print(f"Warning: No training patches found in '{args.data_dir}'. Please verify data directory.")
         return
 
     # Deterministic Train / Validation Split
@@ -229,7 +229,7 @@ def main():
     generator = torch.Generator().manual_seed(args.seed)
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator=generator)
 
-    print(f"📊 Dataset split: {train_size} training patches, {val_size} validation patches ({args.val_split*100:.0f}%)")
+    print(f"Dataset split: {train_size} training patches, {val_size} validation patches ({args.val_split*100:.0f}%)")
 
     train_loader = DataLoader(
         train_dataset,
@@ -262,11 +262,11 @@ def main():
         if val_loader:
             val_loss, val_iou, val_dice = validate_fn(val_loader, model, loss_fn, device)
             eval_metric = val_loss
-            print(f"✅ Epoch {current_epoch} | Train Loss: {train_loss:.4f} IoU: {train_iou:.4f} | Val Loss: {val_loss:.4f} IoU: {val_iou:.4f} Dice: {val_dice:.4f}")
+            print(f"Epoch {current_epoch} | Train Loss: {train_loss:.4f} IoU: {train_iou:.4f} | Val Loss: {val_loss:.4f} IoU: {val_iou:.4f} Dice: {val_dice:.4f}")
         else:
             val_loss, val_iou, val_dice = train_loss, train_iou, train_dice
             eval_metric = train_loss
-            print(f"✅ Epoch {current_epoch} | Train Loss: {train_loss:.4f} IoU: {train_iou:.4f} Dice: {train_dice:.4f}")
+            print(f"Epoch {current_epoch} | Train Loss: {train_loss:.4f} IoU: {train_iou:.4f} Dice: {train_dice:.4f}")
 
         # Check if validation metric improved and update best_loss BEFORE creating checkpoint dicts
         is_best = eval_metric < best_loss
@@ -296,7 +296,7 @@ def main():
         if args.save_every > 0 and current_epoch % args.save_every == 0:
             epoch_path = f"cloudmask_unet_epoch_{current_epoch}.pt"
             torch.save(resumable_checkpoint, epoch_path)
-            print(f"💾 Saved periodic checkpoint: {epoch_path}")
+            print(f"Saved periodic checkpoint: {epoch_path}")
 
         # Save lightweight inference-only checkpoint when new best is achieved
         if is_best:
@@ -309,7 +309,7 @@ def main():
                 "val_dice": float(val_dice)
             }
             torch.save(inference_checkpoint, "cloudmask_unet_best.pt")
-            print(f"🌟 New Best Model Saved to cloudmask_unet_best.pt! (Val Loss: {best_loss:.4f}, IoU: {val_iou:.4f})")
+            print(f"New Best Model Saved to cloudmask_unet_best.pt! (Val Loss: {best_loss:.4f}, IoU: {val_iou:.4f})")
 
 
 if __name__ == "__main__":

@@ -40,10 +40,7 @@ RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
 RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in {"1", "true", "yes"}
 TRUST_PROXY = os.getenv("TRUST_PROXY", "false").lower() in {"1", "true", "yes"}
 
-
-# ============================================================================
 # Pydantic v2 Response Schemas
-# ============================================================================
 
 class HealthResponse(BaseModel):
     status: str = "online"
@@ -86,11 +83,7 @@ class PredictionResponse(BaseModel):
     metadata: PredictionMetadata
     message: str
 
-
-# ============================================================================
 # In-Memory Sliding-Window Rate Limiter
-# ============================================================================
-
 class SlidingWindowRateLimiter:
     def __init__(self, max_requests: int = 15, window_seconds: int = 60):
         self.max_requests = max_requests
@@ -150,11 +143,7 @@ def get_client_ip(request: Request) -> str:
         return request.client.host
     return "127.0.0.1"
 
-
-# ============================================================================
-# Model Path Resolution & Lifespan Handler
-# ============================================================================
-
+# Model Path Resolution & Lifespan Handle
 def resolve_model_path() -> str:
     candidates = [
         os.getenv("MODEL_PATH"),
@@ -204,7 +193,7 @@ async def lifespan(app: FastAPI):
                     else:
                         raise unpickle_err
                 except Exception as safe_err:
-                    logger.critical(f"🚨 Security check: Refusing to load checkpoint unsafely: {safe_err}")
+                    logger.critical(f"Security check: Refusing to load checkpoint unsafely: {safe_err}")
                     raise safe_err
 
             model.load_state_dict(checkpoint["state_dict"])
@@ -215,15 +204,15 @@ async def lifespan(app: FastAPI):
                 "best_loss": float(checkpoint.get("best_loss", 0.0))
             }
             logger.info(
-                f"✅ Model loaded safely with weights_only=True! "
+                f"Model loaded safely with weights_only=True! "
                 f"(Epoch: {app.state.checkpoint_meta['epoch']}, Loss: {app.state.checkpoint_meta['best_loss']:.4f})"
             )
         except Exception as e:
             app.state.model_loaded = False
-            logger.error(f"❌ Failed to load model weights from {model_path}: {e}", exc_info=True)
+            logger.error(f"Failed to load model weights from {model_path}: {e}", exc_info=True)
     else:
         app.state.model_loaded = False
-        logger.warning(f"⚠️ Model checkpoint '{model_path}' not found! Inference will return HTTP 503 until provided.")
+        logger.warning(f"Model checkpoint '{model_path}' not found! Inference will return HTTP 503 until provided.")
 
     yield
 
@@ -234,11 +223,7 @@ async def lifespan(app: FastAPI):
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-
-# ============================================================================
 # FastAPI Application & Security Configuration
-# ============================================================================
-
 app = FastAPI(
     title="CloudMask AI API",
     description="Deep Learning API for Multispectral Satellite Cloud Detection and Segmentation",
@@ -281,10 +266,7 @@ async def security_headers_middleware(request: Request, call_next):
     return response
 
 
-# ============================================================================
 # Image Encoding & Pre-Decode Validation
-# ============================================================================
-
 def encode_image_to_base64(img_array: np.ndarray, format: str = ".png") -> str:
     """Encode OpenCV/numpy image array to base64 Data URL."""
     success, buffer = cv2.imencode(format, img_array)
@@ -680,10 +662,8 @@ async def read_uploaded_file_bytes(file: UploadFile, band_name: str) -> Tuple[st
     return file.filename, contents
 
 
-# ============================================================================
-# API Endpoints
-# ============================================================================
 
+# API Endpoints
 @app.get(
     "/",
     response_model=HealthResponse,

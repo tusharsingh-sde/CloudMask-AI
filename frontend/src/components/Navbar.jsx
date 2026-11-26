@@ -1,6 +1,12 @@
-import { Layers } from "lucide-react";
+import { Layers, Play, Loader2 } from "lucide-react";
 
-export default function Navbar({ activeSection, onNavigate, backendHealth }) {
+export default function Navbar({
+  activeSection,
+  onNavigate,
+  backendHealth,
+  onStartDemo,
+  demoLoading = false,
+}) {
   const isOnline = backendHealth?.status === "online";
   const isChecking = backendHealth === null;
   const device = backendHealth?.device ? backendHealth.device.toUpperCase() : "CPU";
@@ -42,7 +48,7 @@ export default function Navbar({ activeSection, onNavigate, backendHealth }) {
           </div>
         </button>
 
-        {/* Center/Right: Clean Navigation Links */}
+        {/* Center/Right: Clean Navigation Links + Live Demo CTA */}
         <div className="navbar-right">
           <nav className="navbar-links" aria-label="Main Navigation">
             <button
@@ -58,6 +64,22 @@ export default function Navbar({ activeSection, onNavigate, backendHealth }) {
               Studio
             </button>
           </nav>
+
+          {/* 1-Click Guided Demo Trigger */}
+          <button
+            type="button"
+            className={`demo-trigger-btn ${demoLoading ? "is-loading" : ""}`}
+            onClick={onStartDemo}
+            disabled={demoLoading}
+            title="Auto-load 4-band Landsat scene and start guided walkthrough"
+          >
+            {demoLoading ? (
+              <Loader2 size={14} className="demo-spin" />
+            ) : (
+              <Play size={13} fill="currentColor" />
+            )}
+            <span>{demoLoading ? "Running..." : "Live Demo"}</span>
+          </button>
 
           {/* Far Right: Live Telemetry Indicator */}
           <div

@@ -38,9 +38,17 @@ venv.bak/
 # ─────────────────────── Satellite Datasets (Gigabytes in size) ───────────────────────
 38-Cloud_training/
 38-Cloud_test/
+picked_samples/
+find_best_samples.py
 *.TIF
 *.tif
 *.tiff
+
+# Allow curated demo samples in frontend public
+!frontend/public/samples/**
+!frontend/public/samples/**/*.tif
+!frontend/public/samples/**/*.tiff
+!frontend/public/samples/**/*.png
 
 # ─────────────────────── Node.js & Frontend ───────────────────────
 node_modules/
@@ -74,6 +82,10 @@ frontend/.env.*.local
 *.swo
 *~
 .agents/
+.agent/
+.cursor/
+.claude/
+CLAUDE.md
 *.sublime-project
 *.sublime-workspace
 

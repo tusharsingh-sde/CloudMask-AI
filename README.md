@@ -1,319 +1,229 @@
-<div align="center">
+# CloudMask AI — Multispectral Satellite Cloud Segmentation Workbench
 
-# ☁️ CloudMask AI
+> **Real-time 4-band Landsat 8 cloud segmentation powered by a PyTorch U-Net, served through a hardened in-memory FastAPI engine and an interactive mission-control workbench.**
 
-**Automated Multispectral Satellite Cloud Detection & Segmentation with Deep Learning**
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-CPU_Inference-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-In--Memory_API-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-Vite_+_Three.js-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Compose_+_Nginx-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
-[![CI Pipeline](https://github.com/tusharsingh-sde/CloudMask-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/tusharsingh-sde/CloudMask-AI/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.143-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![Three.js](https://img.shields.io/badge/Three.js-0.186-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org)
-[![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+**Live Demo:** `[Add Vercel URL after deployment]` · **Container Registry:** `ghcr.io/tusharsingh-sde/cloudmask-backend`
 
-*Pixel-level cloud segmentation in Landsat 8 multispectral satellite imagery using a hardened PyTorch U-Net architecture trained on the 38-Cloud dataset.*
-
-[Getting Started](#-getting-started) · [Architecture](#-architecture) · [API Reference](#-api-reference) · [Frontend](#-frontend-workbench) · [Docker](#-docker--container-deployment) · [Testing](#-automated-testing)
-
-</div>
+<!-- Drop your 2 best screenshots into docs/screenshots/ and uncomment:
+![CloudMask AI Workbench — Partial Cloud Split Compare](docs/screenshots/partial-cloud-split.png)
+-->
 
 ---
 
-## 📋 Table of Contents
+## 1. The Problem: Why RGB Alone Fails in Earth Observation
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
-- [Getting Started](#-getting-started)
-- [Docker & Container Deployment](#-docker--container-deployment)
-- [Automated Testing](#-automated-testing)
-- [Training](#-training-pipeline-backendtrainpy)
-- [API Reference & Status Codes](#-api-reference--status-codes)
-- [Frontend Workbench](#-frontend-workbench)
-- [Project Structure](#-project-structure)
-- [Roadmap](#-roadmap)
-- [License](#-license)
-- [Acknowledgements](#-acknowledgements)
+Over **65% of Earth's surface** is obscured by clouds at any given moment. In remote sensing pipelines (agriculture monitoring, flood mapping, urban change detection), unmasked clouds corrupt downstream analytics and produce false spectral readings.
+
+Standard computer vision models trained only on 3-channel RGB images fail on one critical edge case: **bright snow and ice look almost identical to clouds in visible light.**
+
+**CloudMask AI** solves this by ingesting **4 synchronized 16-bit Landsat 8 OLI spectral bands**:
+
+| Band | Channel | Wavelength | Role in Segmentation |
+| :--- | :--- | :--- | :--- |
+| **B04** | Red | `640 – 670 nm` | Visible cloud brightness & soil contrast |
+| **B03** | Green | `530 – 590 nm` | Vegetation & surface reflectance |
+| **B02** | Blue | `450 – 515 nm` | Atmospheric scattering & thin haze |
+| **B05** | **Near-Infrared (NIR)** | `850 – 880 nm` | **Separates reflective snow/ice terrain from dense cloud cover** |
 
 ---
 
-## 🔍 Overview
+## 2. Verified Inference Benchmarks (38-Cloud Dataset)
 
-CloudMask AI is an end-to-end deep learning platform for **automated cloud detection and segmentation** in multispectral Earth observation imagery. Accurate cloud detection is an indispensable preprocessing phase in satellite remote sensing — clouds obscure terrestrial targets and distort downstream spectral analyses such as crop yield assessment, wildfire tracking, deforestation monitoring, and flood mapping.
+Evaluated on real 16-bit `384 × 384` (`147,456 px`) Landsat 8 patches from the **38-Cloud** dataset using the production Docker CPU container (`Epoch 11` checkpoint, validation loss `0.0958`, confidence threshold `50%`):
 
-This system provides:
-- A **hardened PyTorch U-Net model** delivering pixel-accurate cloud masks from 4 spectral bands: Red (B04), Green (B03), Blue (B02), and Near-Infrared (B05).
-- A **production-grade FastAPI backend** engineered with sliding-window tiled inference, radiometric 16-bit preservation, pre-decode decompression bomb protection, in-memory sliding-window rate limiting, and safe checkpoint deserialization (`weights_only=True`).
-- A **SpaceX/Planet Labs-inspired React 19 + Three.js Ground Station Workbench** featuring a 3D Earth WebGL hero simulation, multi-band batch dropzone, split-screen curtain slider, and 4-channel inspection.
+| Curated Scene | Patch ID | Ground Truth | Model Prediction | Clear Sky / Ground | CPU Latency | What It Proves |
+| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| **Partial Cloud** | `patch_113` | ~56% | **57.06%** | 42.94% | `1244.1 ms` | Sharp wispy cloud boundary segmentation over dark terrain |
+| **Snow vs. Cloud** | `patch_291` | ~0% | **0.38%** | 99.62% | `1270.9 ms` | **NIR false-positive rejection** on snow/ice-covered land & rivers |
+| **Heavy Overcast** | `patch_157` | ~90% | **94.24%** | 5.76% | `1230.9 ms` | Dense multi-layer cloud detection while preserving clear gaps |
 
----
-
-## ✨ Key Features
-
-| Feature | Description |
-|---|---|
-| 🧠 **Hardened U-Net Architecture** | Pure PyTorch encoder-decoder network with skip connections and bilinear interpolation fallback |
-| 🛰️ **Radiometric Scaling Integrity** | Preserves 16-bit linear scaling (`/ 65535.0 * 255.0`), eliminating false-positive cloud masks on dark clear-sky scenes |
-| 🛡️ **Pre-Decode Decompression Bomb Guard** | Inspects file headers before allocating RAM; rejects corrupt or oversized inputs ($> 4096 \times 4096$) |
-| 🧩 **Sliding-Window Tiled Inference** | $384 \times 384$ sliding tiles with 2D feathered cosine blending for large satellite scenes, eliminating OOM crashes |
-| ⚡ **Async Event-Loop Offloading** | Concurrent upload ingestion on the event loop with CPU/GPU inference offloaded to worker threads via `asyncio.to_thread` |
-| 🔒 **Safe Model Lifespan** | Checkpoints loaded via FastAPI `lifespan` using `weights_only=True`, completely eliminating pickle code execution risks |
-| ⏱️ **Sliding-Window Rate Limiting** | Zero-dependency per-IP rate limiter returning HTTP `429` with `Retry-After` headers and bounded memory |
-| 🌐 **Container-Ready Probes** | Dedicated `/api/health` (liveness) and `/api/ready` (readiness) endpoints for Kubernetes, Cloud Run, and Docker |
-| 🎛️ **Earth Observation Studio** | Batch drag-and-drop, vertical split comparison curtain slider, 4-pane synchronizer, and high-res PNG export |
+> All 3 patches are bundled directly inside the frontend so anyone visiting the live app can reproduce these exact results in **1 click** without hunting for raw GeoTIFF files.
 
 ---
 
-## 🏗 Architecture
+## 3. System Architecture
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        CloudMask AI Platform                           │
-├─────────────────────┬──────────────────────┬───────────────────────────┤
-│  Frontend Studio    │   FastAPI Backend    │     ML Pipeline           │
-│  React 19 + Three   │   Asynchronous API   │                           │
-│  Three.js WebGL     │                      │  Dataset → Train → Model  │
-│  Batch Dropzone     │  /api/predict        │                           │
-│  Split Compare      │  /api/ready          │  38-Cloud    Pure PyTorch │
-│  4-Pane Matrix      │  /api/health         │  4-Band      AMP (FP16)   │
-│  Tabular Telemetry  │  Rate Limiting / CORS│  (R,G,B,NIR) Checkpoint   │
-├─────────────────────┴──────────────────────┼───────────────────────────┤
-│  Browser Client (Zero Invisible Elements)  │  Tiled Inference Engine   │
-└────────────────────────────────────────────────────────────────────────┘
+```text
+┌──────────────────────────────────────────────────────────────────────┐
+│  Frontend (React + Vite + Three.js)                                  │
+│  • 3D Earth Hero Overview & Sticky Live-Telemetry Navbar             │
+│  • 1-Click "Live Demo" + Non-Blocking 3-Step Guided Coachbar         │
+│  • Bundled Landsat 8 Sample Scenes + Multi-Band Drag & Drop          │
+│  • Split-Curtain Compare · Single View · 2×2 Quad Grid · PNG Export  │
+└─────────────────────────────────┬────────────────────────────────────┘
+                                  │ POST /api/predict (4 × 16-bit GeoTIFF)
+                                  │ ?threshold=0.5&overlay_opacity=0.45
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│  Nginx Reverse Proxy (Local Docker / Vercel)                         │
+└─────────────────────────────────┬────────────────────────────────────┘
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│  FastAPI Inference Engine (Python 3.12 · Non-Root)                   │
+│  1. Validate & decode 4 raw 16-bit bands strictly in memory          │
+│  2. Radiometric normalization → 4-channel tensor [1, 4, H, W]       │
+│  3. PyTorch U-Net forward pass (CPU wheel, weights_only=True)        │
+│  4. Sigmoid thresholding + pixel telemetry calculation               │
+│  5. Render 4 visual artifacts: RGB, Cyan Overlay, Binary Mask,       │
+│     and Magma Probability Heatmap (zero temporary disk writes)       │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🛠 Tech Stack
+## 4. Key Features
+
+### Interactive Ground-Station UX
+
+- **Zero-Friction ▶ Live Demo + 3-Step Guided Coachbar:** Clicking *Live Demo* in the navbar scrolls smoothly to the workbench, auto-loads all 4 bands of the Partial Cloud scene, triggers live U-Net inference, and walks the visitor through curtain comparison and a 1-click Snow vs. Cloud NIR stress test.
+- **1-Click Sample Scenes:** Built-in curated Landsat 8 scenes (Partial Cloud, Snow vs. Cloud, Heavy Overcast) with normalized RGB thumbnails for instant testing.
+- **Smart Multi-Band Ingestion:** Drop all 4 `.tif` files at once—filenames (`red`/`b04`, `green`/`b03`, `blue`/`b02`, `nir`/`b05`) are auto-matched into their respective slots. Non-browser-renderable 16-bit GeoTIFFs render clean `16-BIT GEOTIFF · READY` status cards instead of broken thumbnails.
+- **Multi-Mode Inspection Viewport:**
+  - **Split Compare:** Interactive vertical curtain slider (pointer + ← / → keyboard accessible) comparing True-Color RGB against Mask Overlay, Binary Mask, or Magma Probability Heatmap.
+  - **Single View & 2×2 Quad Grid:** Inspect all 4 output channels simultaneously, open fullscreen lightbox, switch between previous runs in Run History, or export individual / all 4 PNGs.
+- **Live Inference Hyperparameters:** Tune *Confidence Threshold* (10% – 90%) for precision/recall control and *Overlay Opacity* (10% – 100%) for visual inspection.
+
+### Production & ML Engineering
+
+- **Zero Disk Latency:** Uploaded bands and output PNGs are processed completely in memory—no temporary files left on disk.
+- **Safe & Lean PyTorch Runtime:** Uses CPU-only PyTorch wheels on `python:3.12-slim` under a non-root container user (`appuser`) and loads model checkpoints safely with `weights_only=True`.
+- **Health & Readiness Probes:** Dedicated `/api/health` and `/api/ready` endpoints wired to Docker healthchecks and frontend live telemetry polling.
+- **Automated Quality Gates:** Backed by a `pytest` backend test suite, `oxlint` + Vite frontend checks, and GitHub Actions CI.
+
+---
+
+## 5. Tech Stack
 
 | Layer | Technologies |
-|---|---|
-| **Deep Learning** | PyTorch 2.x (pure PyTorch, zero `torchvision` runtime dependency) |
-| **Computer Vision** | OpenCV (Headless for Docker/Cloud), Pillow, Tifffile |
-| **Backend API** | FastAPI, Uvicorn, Pydantic v2, Python-Multipart |
-| **Frontend UI** | React 19, Three.js, Lucide Icons, Plus Jakarta Sans, JetBrains Mono |
-| **Tooling & Build** | Vite 8, Oxlint, Pytest |
-| **Training Pipeline** | CUDA, PyTorch AMP (Mixed Precision), CosineAnnealingLR, DataParallel |
-| **Containers & CI** | Docker, Docker Compose, Nginx, GitHub Actions |
-| **Dataset** | [38-Cloud Landsat 8 Dataset](https://github.com/SorourMo/38-Cloud-A-Cloud-Segmentation-Dataset) |
+| :--- | :--- |
+| **Deep Learning** | PyTorch (4-Channel U-Net), NumPy, 38-Cloud Landsat 8 Dataset |
+| **Backend API** | FastAPI, Uvicorn, Pillow / GeoTIFF Processing, In-Memory Pipelines |
+| **Frontend** | React, Vite, Three.js (EarthScene), Lucide Icons, Custom Mission-Control CSS |
+| **Containerization & Proxy** | Docker, Docker Compose, Nginx (`nginx:alpine`), Multi-Stage Builds |
+| **Testing & Deployment** | Pytest, GitHub Actions CI, GHCR, Azure Container Apps (Scale-to-Zero), Vercel |
 
 ---
 
-## 🚀 Getting Started
+## 6. Project Structure
 
-### Prerequisites
+```text
+CloudMask-AI/
+├── backend/
+│   ├── Dockerfile              # Lean CPU-only python:3.12-slim non-root image
+│   ├── requirements.txt
+│   ├── download_model.py       # Optional checkpoint fetch for cloud builds
+│   └── ...                     # FastAPI app, U-Net architecture, inference & tests
+├── frontend/
+│   ├── public/samples/         # 3 curated 4-band Landsat 8 sample scenes (~3.5 MB)
+│   │   ├── partial-cloud/      # red.tif, green.tif, blue.tif, nir.tif, preview.png
+│   │   ├── snow-vs-cloud/
+│   │   └── heavy-cloud/
+│   ├── src/
+│   │   ├── components/         # Navbar, HeroSection, EarthScene, StudioWorkbench
+│   │   ├── constants/          # bands.js, samples.js
+│   │   ├── services/api.js     # /api/health & /api/predict client
+│   │   └── App.jsx             # Shared demo state & 3-step guided coachbar
+│   ├── nginx.conf              # Reverse proxy (/api -> backend:8000)
+│   └── Dockerfile              # Multi-stage Node 20 -> Nginx Alpine
+├── docker-compose.yml          # Full-stack local orchestration with healthchecks
+└── .github/workflows/          # Automated CI pipeline
+```
 
-- Python 3.10+
-- Node.js 18+ & npm
-- CUDA-capable GPU *(recommended for training; CPU is fully supported for inference)*
+---
 
-### 1. Local Development Setup
+## 7. Quick Start
+
+### Option A: Docker Compose (Recommended — Full Stack in 1 Command)
 
 ```bash
-# Clone repository
 git clone https://github.com/tusharsingh-sde/CloudMask-AI.git
 cd CloudMask-AI
-
-# Create and activate Python virtual environment
-python -m venv .venv
-# Windows: .venv\Scripts\activate | Linux: source .venv/bin/activate
-
-# Install backend dependencies
-cd backend
-pip install -r requirements.txt
-
-# Download model weights (skips cleanly if already downloaded)
-python download_model.py --skip-existing
-
-# Start backend server (runs on http://127.0.0.1:8000)
-python api.py
-```
-
-In a separate terminal, start the React 19 frontend:
-
-```bash
-cd frontend
-npm install
-npm run dev
-# Studio Workbench opens on http://localhost:5173
-```
-
----
-
-## 🐳 Docker & Container Deployment
-
-### Run Full Stack with Docker Compose
-
-Launch the complete stack (FastAPI backend + Nginx-reverse-proxied React frontend) with a single command:
-
-```bash
 docker compose up --build
 ```
-- **Frontend Workbench**: `http://localhost:8080`
-- **Backend API**: `http://localhost:8000` (`http://localhost:8000/docs` for OpenAPI Swagger)
 
-### Standalone Production Backend Container
+- **Frontend (via Nginx):** http://localhost:8080
+- **Backend Readiness Check:** http://localhost:8000/api/ready
+- Click **▶ Live Demo** in the top bar to verify the full 4-band pipeline immediately.
 
-Build a lean, CPU-optimized container with weights pre-baked:
+### Option B: Local Development (Without Docker)
 
-```bash
-docker build -t cloudmask-backend --build-arg DOWNLOAD_MODEL=true ./backend
-docker run -p 8000:8000 cloudmask-backend
-```
-
----
-
-## 🧪 Automated Testing
-
-### Run Pytest Backend Suite
-
-The suite executes 19 comprehensive tests verifying radiometric scaling, tiled inference, decompression bomb protection, rate limiting, and pure PyTorch architecture:
-
-```bash
-# Run tests with verbose output
-pytest backend/tests -v
-```
-
-### Run Frontend Lint & Build Checks
-
-```bash
-cd frontend
-npm run lint    # Oxlint check (0 warnings, 0 errors)
-npm run build   # Production Vite bundling
-```
-
----
-
-## 🏋️ Training Pipeline (`backend/train.py`)
-
-Train or fine-tune the U-Net on the 38-Cloud dataset:
+**Backend:**
 
 ```bash
 cd backend
-python train.py --epochs 20 --batch-size 32 --lr 3e-4 --val-split 0.15
+python -m venv .venv
+# Windows: .venv\Scripts\activate | Linux/macOS: source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn api:app --reload --port 8000
 ```
 
-### Supported CLI Flags
+**Frontend:**
 
-- `--data-dir PATH`: Directory containing `train_red`, `train_green`, `train_blue`, `train_nir`, `train_gt` (auto-detected).
-- `--epochs INT`: Number of training epochs (default: `20`).
-- `--batch-size INT`: Batch size (default: `32` on CUDA, `4` on CPU).
-- `--lr FLOAT`: AdamW learning rate (default: `3e-4`) with `CosineAnnealingLR` scheduler.
-- `--val-split FLOAT`: Validation set fraction (default: `0.15`, seeded deterministically).
-- `--seed INT`: Random seed (default: `42`).
-- `--resume PATH`: Resume training from an existing checkpoint (`cloudmask_unet_latest.pt`).
-- `--save-every INT`: Save periodic checkpoint every N epochs (default: `0` = disabled to avoid disk bloat).
-
----
-
-## 📡 API Reference & Status Codes
-
-### Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/health` | Liveness probe returning engine device and model status |
-| `GET` | `/api/ready` | Readiness probe returning `200` when model is loaded, `503` when uninitialized |
-| `POST` | `/api/predict` | Multispectral cloud segmentation pipeline |
-
-### HTTP Status Codes
-
-- **`200 OK`**: Inference completed successfully.
-- **`400 Bad Request`**: Corrupt raster file, missing required band, invalid dimensions ($< 16\text{ px}$ or $> 4096\text{ px}$).
-- **`413 Payload Too Large`**: Any individual band file exceeds $25\text{ MB}$.
-- **`422 Unprocessable Entity`**: Parameter validation failure (`threshold` outside $0.05..0.95$ or `overlay_opacity` outside $0.1..1.0$).
-- **`429 Too Many Requests`**: Rate limit exceeded (includes standard `Retry-After` header).
-- **`503 Service Unavailable`**: Model weights are not loaded.
-
----
-
-## 🖥 Frontend Workbench
-
-The React 19 Ground Station provides:
-- **Cinematic WebGL Space Simulation**: Rotating Earth with layered atmospheric glow, 3D undulating particle wave, and micro-satellites.
-- **Smart Multi-Band Ingestion**: Drag & drop all 4 band files simultaneously; automatically identifies Red (B04), Green (B03), Blue (B02), and NIR (B05) from filenames.
-- **Split Comparison Curtain Slider**: Interactive comparison between True-Color RGB and segmented cloud masks with mouse drag, touch, and arrow-key navigation.
-- **Multi-View Modes**: Split View, Single Channel, and 2×2 Synchronized Quad Matrix.
-- **High-Resolution Exports**: Download individual channels or batch export all 4 imagery layers as PNGs.
-
----
-
-## 📁 Project Structure
-
+```bash
+cd frontend
+npm ci
+npm run dev
 ```
-CloudMask-AI/
-│
-├── .github/
-│   └── workflows/
-│       └── ci.yml             # GitHub Actions CI workflow (Pytest + Vite Build)
-│
-├── backend/
-│   ├── api.py                 # Hardened FastAPI service with tiled inference & rate limiting
-│   ├── model.py               # Pure PyTorch U-Net architecture definition
-│   ├── dataset.py             # 38-Cloud dataset loader (pure PyTorch tensor conversion)
-│   ├── train.py               # Training loop with validation split, AMP, and metrics
-│   ├── download_model.py      # Atomic model downloader with checksum & CI flags
-│   ├── Dockerfile             # Lean CPU-only container definition
-│   ├── .dockerignore          # Docker build exclusions
-│   ├── requirements.txt       # Lean production inference dependencies
-│   ├── requirements-train.txt # Model training dependencies
-│   ├── requirements-dev.txt   # Automated test dependencies
-│   ├── pytest.ini             # Pytest discovery configuration
-│   ├── tests/                 # Automated test suite
-│   │   ├── conftest.py        # Fixtures, test client, and raster factories
-│   │   ├── test_api.py        # REST API endpoints & security tests
-│   │   └── test_ml.py         # PyTorch model & dataset tests
-│   ├── .env.example           # Documented environment variable template
-│   └── README.md              # Backend documentation
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── EarthScene.jsx       # Three.js 3D Earth, particle wave & satellites
-│   │   │   ├── HeroSection.jsx      # Minimalist editorial aerospace hero
-│   │   │   ├── Navbar.jsx           # Glass sticky navbar with live telemetry
-│   │   │   └── StudioWorkbench.jsx  # Multi-band dropzone, split slider & quad matrix
-│   │   ├── constants/               # Landsat 8 band definitions (B02..B05)
-│   │   ├── styles/tokens.css        # Deep space design system tokens
-│   │   ├── App.jsx                  # Application state & section tracking
-│   │   └── App.css                  # Tailored aerospace ground station styling
-│   ├── Dockerfile                   # Multi-stage Nginx container build
-│   ├── nginx.conf                   # Reverse proxy configuration
-│   ├── package.json
-│   └── vite.config.js               # Development proxy configuration
-│
-├── docker-compose.yml               # Local full-stack orchestration
-└── README.md                        # Master project documentation
+
+Open http://localhost:5173 (ensure `VITE_API_URL` points to `http://localhost:8000` if not using the Vite proxy).
+
+---
+
+## 8. API Reference
+
+| Endpoint | Method | Purpose |
+| :--- | :--- | :--- |
+| `/api/health` | `GET` | Liveness status, active compute device (CPU), checkpoint epoch & loss |
+| `/api/ready` | `GET` | Readiness probe returning `200 OK` only once U-Net weights are loaded |
+| `/api/predict` | `POST` | Runs 4-band cloud segmentation and returns telemetry + 4 rendered image URLs |
+
+### `POST /api/predict` Parameters:
+
+- **Form Data** (`multipart/form-data`): `red`, `green`, `blue`, `nir` (synchronized `.tif`/`.tiff`/`.png`/`.jpg` band files)
+- **Query Params:** `threshold` (0.10–0.90, default 0.50), `overlay_opacity` (0.10–1.00, default 0.45)
+
+**Sample JSON Response (truncated):**
+
+```json
+{
+  "cloud_coverage_percentage": 57.06,
+  "clear_sky_percentage": 42.94,
+  "cloud_pixels": 84143,
+  "total_pixels": 147456,
+  "rgb_composite_url": "data:image/png;base64,...",
+  "overlay_url": "data:image/png;base64,...",
+  "mask_url": "data:image/png;base64,...",
+  "heatmap_url": "data:image/png;base64,...",
+  "metadata": {
+    "dimensions": "384 x 384 px",
+    "inference_time_ms": 1244.1,
+    "device": "cpu",
+    "threshold": 0.5,
+    "overlay_opacity": 0.45,
+    "model_epoch": 11,
+    "model_best_loss": 0.0958
+  }
+}
 ```
 
 ---
 
-## 🗺 Roadmap
+## 9. Cloud Deployment Architecture
 
-- [x] U-Net model architecture (Pure PyTorch, zero `torchvision`)
-- [x] Training pipeline with mixed precision, cosine annealing & validation split
-- [x] Hardened FastAPI inference API with rate limiting, tiled inference & DoS guards
-- [x] Automated model release downloader with atomic checksums
-- [x] React 19 + Three.js aerospace ground station workbench (Zero GSAP bugs)
-- [x] Automated Pytest test suite (19 tests covering ML + API)
-- [x] Docker containerization (`backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml`)
-- [x] Continuous Integration (`.github/workflows/ci.yml`)
-- [ ] Cloud deployment (GCP Cloud Run / AWS ECS)
+Designed for low-cost, zero-idle-spend production hosting:
+
+- **Container Registry (GHCR):** Backend Docker image built with model weights baked in and published to `ghcr.io/tusharsingh-sde/cloudmask-backend:v1`.
+- **Backend Compute (Azure Container Apps):** 1.0 vCPU, 2.0 GiB RAM, port 8000, readiness probe `/api/ready`, min-replicas: 0 (scale-to-zero), with `ALLOWED_ORIGINS` locked to the production frontend domain.
+- **Frontend Hosting (Vercel):** Deployed from `frontend/` with `VITE_API_URL` pointing to the Azure Container Apps HTTPS endpoint.
 
 ---
 
-## 📄 License
+## Author
 
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-## 🙏 Acknowledgements
-
-- **38-Cloud Dataset** by Sorour Mohajerani and Parvaneh Saeedi ([Paper](https://arxiv.org/abs/1901.03358))
-- **U-Net Architecture** by Ronneberger et al. ([Paper](https://arxiv.org/abs/1505.04597))
-- **USGS / NASA** for Landsat 8 multispectral Earth observation imagery
+Built by **Tushar Singh** · [GitHub](https://github.com/tusharsingh-sde)

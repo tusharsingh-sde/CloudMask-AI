@@ -100,7 +100,7 @@ export default function ResultViewer({ result, onNewAnalysis }) {
       <div className="stats-grid">
         <div className="stat-card stat-cloud">
           <div className="stat-value">{cloud_coverage_percentage}%</div>
-          <div className="stat-label">☁️ Cloud Coverage</div>
+          <div className="stat-label">Cloud Coverage</div>
           <div className="stat-bar-track">
             <div
               className="stat-bar-fill cloud-fill"
@@ -112,7 +112,7 @@ export default function ResultViewer({ result, onNewAnalysis }) {
 
         <div className="stat-card stat-clear">
           <div className="stat-value">{clear_sky_percentage}%</div>
-          <div className="stat-label">🌤️ Clear Ground / Sky</div>
+          <div className="stat-label">Clear Ground / Sky</div>
           <div className="stat-bar-track">
             <div
               className="stat-bar-fill clear-fill"
@@ -124,13 +124,13 @@ export default function ResultViewer({ result, onNewAnalysis }) {
 
         <div className="stat-card">
           <div className="stat-value">{total_pixels.toLocaleString()}</div>
-          <div className="stat-label">📐 Total Pixels Processed</div>
+          <div className="stat-label">Total Pixels Processed</div>
           <span className="stat-sub">{metadata.dimensions || "Harmonized Band Array"}</span>
         </div>
 
         <div className="stat-card">
           <div className="stat-value">{metadata.inference_time_ms ? `${metadata.inference_time_ms} ms` : "< 1s"}</div>
-          <div className="stat-label">⚡ Inference Latency</div>
+          <div className="stat-label">Inference Latency</div>
           <span className="stat-sub">Device: {metadata.device?.toUpperCase() || "CPU"}</span>
         </div>
       </div>

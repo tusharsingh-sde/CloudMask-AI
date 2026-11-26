@@ -4,32 +4,26 @@ import EarthScene from "./EarthScene";
 export default function HeroSection({ onOpenStudio }) {
   return (
     <section id="overview" className="hero-section">
-      {/* Full-Bleed 3D WebGL Canvas */}
       <div className="hero-webgl-canvas-container">
         <EarthScene />
       </div>
 
-      {/* Hero Foreground Content */}
       <div className="hero-inner">
         <div className="hero-copy-column">
-          {/* Minimal 24px Cyan Hairline Eyebrow */}
           <div className="hero-eyebrow">
             <span className="eyebrow-line" />
             <span className="eyebrow-text">LANDSAT 8 · 38-CLOUD U-NET</span>
           </div>
 
-          {/* Crisp 2-Line Editorial Headline */}
           <h1 className="hero-headline">
             <span className="headline-line-white">See through the clouds.</span>
             <span className="headline-line-gradient">Resolve every pixel.</span>
           </h1>
 
-          {/* Concise 2-Line Product Pitch */}
           <p className="hero-pitch">
             Radiometric deep learning pipeline isolating sub-kilometer cloud formations and shadows across 4 spectral bands in real time with zero disk latency.
           </p>
 
-          {/* Primary CTA & Secondary Specification Link */}
           <div className="hero-cta-row">
             <button
               className="hero-primary-cta"
@@ -46,7 +40,6 @@ export default function HeroSection({ onOpenStudio }) {
             </div>
           </div>
 
-          {/* Micro Telemetry Pills */}
           <div className="hero-telemetry-row">
             <div className="telemetry-pill">
               <Layers size={13} className="pill-icon" />
@@ -60,7 +53,6 @@ export default function HeroSection({ onOpenStudio }) {
         </div>
       </div>
 
-      {/* Hero Bottom Telemetry Bar */}
       <div className="hero-bottom-bar">
         <div className="hero-bottom-left">
           <span className="meta-sync-dot" />

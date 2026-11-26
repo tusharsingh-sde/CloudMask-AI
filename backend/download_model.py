@@ -43,10 +43,10 @@ def get_release_asset_url(tag: Optional[str] = None) -> Tuple[Optional[str], Opt
     """Fetch the asset download URL and release tag name from GitHub Releases API."""
     if tag:
         api_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/releases/tags/{tag}"
-        print(f"📡 Querying GitHub Release tag '{tag}' from {REPO_OWNER}/{REPO_NAME}...")
+        print(f"Querying GitHub Release tag '{tag}' from {REPO_OWNER}/{REPO_NAME}...")
     else:
         api_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/releases/latest"
-        print(f"📡 Querying latest GitHub Release from {REPO_OWNER}/{REPO_NAME}...")
+        print(f"Querying latest GitHub Release from {REPO_OWNER}/{REPO_NAME}...")
 
     req = build_github_request(api_url)
 
@@ -71,7 +71,7 @@ def get_release_asset_url(tag: Optional[str] = None) -> Tuple[Optional[str], Opt
 def download_atomic_with_progress(url: str, dest_path: str):
     """Download a file atomically to a .tmp file with progress, verifying file integrity."""
     tmp_path = dest_path + ".tmp"
-    print(f"⬇️  Streaming download from: {url}")
+    print(f"Streaming download from: {url}")
     print(f"   Destination: {dest_path}")
 
     req = build_github_request(url)
@@ -100,7 +100,7 @@ def download_atomic_with_progress(url: str, dest_path: str):
                         mb_down = downloaded / (1024 * 1024)
                         print(f"\r   Downloaded: {mb_down:.1f} MB", end="", flush=True)
 
-        print("\n🔍 Validating downloaded archive integrity...")
+        print("\nValidating downloaded archive integrity...")
 
         # 1. Verify non-empty size
         actual_size = os.path.getsize(tmp_path)
@@ -124,7 +124,7 @@ def download_atomic_with_progress(url: str, dest_path: str):
 
         # 3. Atomic replacement
         os.replace(tmp_path, dest_path)
-        print(f"✅ Model successfully downloaded & validated: {dest_path} ({actual_size / (1024*1024):.1f} MB)")
+        print(f"Model successfully downloaded & validated: {dest_path} ({actual_size / (1024*1024):.1f} MB)")
 
     except Exception:
         if os.path.exists(tmp_path):
@@ -153,7 +153,7 @@ def main():
     # Check existing file
     if os.path.exists(dest_path):
         size_mb = os.path.getsize(dest_path) / (1024 * 1024)
-        print(f"ℹ️  Checkpoint already exists at {dest_path} ({size_mb:.1f} MB)")
+        print(f"Checkpoint already exists at {dest_path} ({size_mb:.1f} MB)")
 
         if args.skip_existing:
             print("   --skip-existing specified. Exiting cleanly.")
@@ -177,21 +177,21 @@ def main():
     try:
         url, tag = get_release_asset_url(args.tag)
     except Exception as e:
-        print(f"❌ Failed to query GitHub release: {e}")
+        print(f"Failed to query GitHub release: {e}")
         print(f"   Visit: https://github.com/{REPO_OWNER}/{REPO_NAME}/releases")
         sys.exit(1)
 
     if not url:
-        print(f"❌ Asset '{MODEL_FILENAME}' was not found in release tag '{tag}'.")
+        print(f"Asset '{MODEL_FILENAME}' was not found in release tag '{tag}'.")
         print(f"   Visit: https://github.com/{REPO_OWNER}/{REPO_NAME}/releases")
         sys.exit(1)
 
-    print(f"🏷️  Resolved GitHub Release Tag: {tag}")
+    print(f"Resolved GitHub Release Tag: {tag}")
 
     try:
         download_atomic_with_progress(url, dest_path)
     except Exception as e:
-        print(f"❌ Download failed: {e}")
+        print(f"Download failed: {e}")
         sys.exit(1)
 
 

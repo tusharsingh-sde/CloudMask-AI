@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   UploadCloud,
-  FileCheck2,
   X,
   RotateCcw,
   Sliders,
@@ -17,6 +16,16 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { BANDS } from "../constants/bands";
+import { SAMPLE_SCENES } from "../constants/samples";
+
+const isTiffFile = (file) => {
+  if (!file) return false;
+  return (
+    /\.(tif|tiff)$/i.test(file.name || "") ||
+    file.type === "image/tiff" ||
+    file.type === "image/x-tiff"
+  );
+};
 
 export default function StudioWorkbench({
   files,
@@ -33,6 +42,10 @@ export default function StudioWorkbench({
   runHistory = [],
   onSelectRun,
   backendHealth,
+  activeSampleId = null,
+  loadingSampleId = null,
+  onLoadSample,
+  onClearActiveSample,
 }) {
   // Input UI State
   const [multiDropActive, setMultiDropActive] = useState(false);
@@ -48,17 +61,26 @@ export default function StudioWorkbench({
   const [isDraggingSplit, setIsDraggingSplit] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [previewUrls, setPreviewUrls] = useState({});
+  const [imageDecodeErrors, setImageDecodeErrors] = useState({});
 
   const splitStageRef = useRef(null);
 
-  // Manage Object URLs safely for uploaded image previews (PNG/JPG)
+  // Manage Object URLs safely for uploaded image previews (PNG/JPG/WEBP only, skipping GeoTIFF)
   useEffect(() => {
     let active = true;
     const urls = {};
     BANDS.forEach((band) => {
       const file = files[band.id];
-      if (file && (file.type.startsWith("image/") || file.name.match(/\.(png|jpe?g)$/i))) {
-        urls[band.id] = URL.createObjectURL(file);
+      if (
+        file &&
+        !isTiffFile(file) &&
+        (file.type.startsWith("image/") || /\.(png|jpe?g|webp)$/i.test(file.name || ""))
+      ) {
+        try {
+          urls[band.id] = URL.createObjectURL(file);
+        } catch {
+          // ignore
+        }
       }
     });
     queueMicrotask(() => {
@@ -133,13 +155,15 @@ export default function StudioWorkbench({
       }
     });
 
+    onClearActiveSample?.();
     onFilesChange(updated);
     setAutoMatchToast(`${matchedCount} spectral band${matchedCount > 1 ? "s" : ""} assigned.`);
     setTimeout(() => setAutoMatchToast(null), 3500);
-  }, [files, onFilesChange]);
+  }, [files, onFilesChange, onClearActiveSample]);
 
   // Individual Band Upload / Clear
   const handleSingleFile = (bandId, file) => {
+    onClearActiveSample?.();
     onFilesChange({
       ...files,
       [bandId]: file,
@@ -148,6 +172,7 @@ export default function StudioWorkbench({
 
   const handleClearBand = (bandId, e) => {
     e.stopPropagation();
+    onClearActiveSample?.();
     const updated = { ...files };
     delete updated[bandId];
     if (fileInputRefs.current[bandId]) {
@@ -157,6 +182,7 @@ export default function StudioWorkbench({
   };
 
   const handleResetAll = () => {
+    onClearActiveSample?.();
     Object.keys(fileInputRefs.current).forEach((k) => {
       if (fileInputRefs.current[k]) fileInputRefs.current[k].value = "";
     });
@@ -238,11 +264,8 @@ export default function StudioWorkbench({
   return (
     <div id="studio" className="workbench-section">
       <div className="workbench-container">
-        {/* =========================================================
-            LEFT COLUMN: SPECTRAL INPUT & INFERENCE CONTROLS (~410px)
-            ========================================================= */}
+        {/* Spectral Input & Inference Controls */}
         <aside className="workbench-sidebar">
-          {/* Section Header */}
           <div className="sidebar-header">
             <div className="header-eyebrow">
               <span className="accent-square" />
@@ -287,6 +310,63 @@ export default function StudioWorkbench({
             />
           </div>
 
+          {/* Quick-Load Sample Scenes */}
+          <div className="sample-scenes-block">
+            <div className="sample-scenes-header">
+              <div className="sample-scenes-eyebrow">
+                <Sparkles size={12} className="icon-cyan" />
+                <span>QUICK-LOAD SAMPLE SCENES</span>
+              </div>
+              <span className="sample-scenes-badge">1-CLICK TEST</span>
+            </div>
+
+            <div className="sample-scenes-list">
+              {SAMPLE_SCENES.map((scene) => {
+                const isActive = activeSampleId === scene.id && allLoaded;
+                const isFetching = loadingSampleId === scene.id;
+                const baseUrl = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+                const previewSrc = `${baseUrl}/samples/${scene.folder}/preview.png`;
+
+                return (
+                  <button
+                    key={scene.id}
+                    type="button"
+                    className={`sample-scene-card ${isActive ? "active-sample" : ""}`}
+                    onClick={() => onLoadSample?.(scene)}
+                    disabled={loading || loadingSampleId !== null}
+                    title={`1-Click Test: ${scene.title} (${scene.tag})`}
+                  >
+                    <div className="sample-thumb-wrap">
+                      <img
+                        src={previewSrc}
+                        alt={scene.title}
+                        className="sample-thumb-img"
+                        loading="lazy"
+                      />
+                    </div>
+
+                    <div className="sample-scene-info">
+                      <div className="sample-scene-title-row">
+                        <span className="sample-scene-name">{scene.title}</span>
+                        {isActive && <span className="sample-active-dot" title="Active Scene" />}
+                      </div>
+                      <div className="sample-scene-meta-row">
+                        {isFetching ? (
+                          <span className="sample-loading-status">
+                            <span className="sample-mini-spinner" />
+                            <span>FETCHING...</span>
+                          </span>
+                        ) : (
+                          <span className="sample-scene-tag">{scene.tag}</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {autoMatchToast && (
             <div className="match-toast">
               <Sparkles size={14} className="toast-icon" />
@@ -299,6 +379,10 @@ export default function StudioWorkbench({
             {BANDS.map((band) => {
               const file = files[band.id];
               const preview = previewUrls[band.id];
+              const isTiff = isTiffFile(file);
+              const fileKey = file ? `${file.name}_${file.size}_${file.lastModified}` : "";
+              const hasDecodeError = Boolean(file && imageDecodeErrors[band.id] === fileKey);
+              const hasPreview = Boolean(file && preview && !hasDecodeError && !isTiff);
               const isOver = dragOverBand === band.id;
 
               return (
@@ -344,16 +428,41 @@ export default function StudioWorkbench({
                     )}
                   </div>
 
-                  {/* Thumbnail / Waveform Representation */}
                   <div className="card-body">
-                    {preview ? (
+                    {hasPreview ? (
                       <div className="slot-thumbnail-wrap">
-                        <img src={preview} alt={band.name} className="slot-thumbnail" />
+                        <img
+                          src={preview}
+                          alt={band.name}
+                          className="slot-thumbnail"
+                          onError={() => {
+                            if (file) {
+                              setImageDecodeErrors((prev) => ({
+                                ...prev,
+                                [band.id]: `${file.name}_${file.size}_${file.lastModified}`,
+                              }));
+                            }
+                          }}
+                        />
                       </div>
                     ) : file ? (
-                      <div className="slot-raster-icon">
-                        <FileCheck2 size={24} style={{ color: band.color }} />
-                        <span className="raster-tag">TIFF RASTER</span>
+                      <div className="geotiff-preview-state">
+                        <div
+                          className="geotiff-icon-box"
+                          style={{
+                            backgroundColor: `${band.color}15`,
+                            borderColor: `${band.color}35`,
+                          }}
+                        >
+                          <Layers size={18} className="geotiff-icon" style={{ color: band.color }} />
+                        </div>
+                        <div className="geotiff-details">
+                          <span className="geotiff-badge">16-BIT GEOTIFF</span>
+                          <span className="geotiff-status">
+                            <span className="geotiff-status-dot" />
+                            <span>READY · RAW BAND</span>
+                          </span>
+                        </div>
                       </div>
                     ) : (
                       <div className="slot-placeholder">
@@ -363,7 +472,6 @@ export default function StudioWorkbench({
                     )}
                   </div>
 
-                  {/* Footer metadata */}
                   <div className="card-footer">
                     {file ? (
                       <div className="file-meta">
@@ -480,11 +588,8 @@ export default function StudioWorkbench({
           </div>
         </aside>
 
-        {/* =========================================================
-            RIGHT COLUMN: LIVE INSPECTION VIEWPORT (FLEX: 1)
-            ========================================================= */}
+        {/* Live Inspection Viewport */}
         <main className="workbench-stage">
-          {/* Header Bar */}
           <div className="stage-topbar">
             <div className="stage-title-wrap">
               <div className="stage-title-eyebrow">
@@ -494,7 +599,6 @@ export default function StudioWorkbench({
               <h3>Radiometric Telemetry & Analysis</h3>
             </div>
 
-            {/* Run History Switcher Pills (If >1 run) */}
             {runHistory.length > 1 && (
               <div className="history-pill-strip">
                 <span className="history-label">Runs:</span>
@@ -511,7 +615,7 @@ export default function StudioWorkbench({
             )}
           </div>
 
-          {/* STATE 1: LOADING STATE */}
+          {/* Loading State */}
           {loading && (
             <div className="stage-panel stage-loading">
               <div className="radar-sweep-container">
@@ -528,7 +632,7 @@ export default function StudioWorkbench({
             </div>
           )}
 
-          {/* STATE 2: EMPTY STATE (Before First Run) */}
+          {/* Standby State */}
           {!loading && !result && (
             <div className="stage-panel stage-standby">
               <div className="standby-crosshair top-left" />
@@ -578,10 +682,9 @@ export default function StudioWorkbench({
             </div>
           )}
 
-          {/* STATE 3: ACTIVE RESULTS PRESENTATION */}
+          {/* Results View */}
           {!loading && result && (
             <div className="stage-panel stage-results">
-              {/* Top KPI Telemetry Strip (4 tabular-nums cards) */}
               <div className="kpi-telemetry-strip">
                 <div className="kpi-card kpi-cloud">
                   <div className="kpi-num">{result.cloud_coverage_percentage}%</div>
@@ -630,9 +733,7 @@ export default function StudioWorkbench({
                 </div>
               </div>
 
-              {/* Viewport Toolbar: Mode Switcher + Actions */}
               <div className="viewport-toolbar">
-                {/* Mode Switcher Tabs */}
                 <div className="mode-switcher-group">
                   <button
                     className={`mode-tab-btn ${viewerMode === "split" ? "active" : ""}`}
@@ -728,9 +829,7 @@ export default function StudioWorkbench({
                 </div>
               </div>
 
-              {/* STAGE PRESENTATION AREA */}
               <div className="inspection-stage-canvas">
-                {/* MODE A: SPLIT COMPARE (VERTICAL CURTAIN SLIDER) */}
                 {viewerMode === "split" && (
                   <div
                     ref={splitStageRef}
@@ -747,14 +846,12 @@ export default function StudioWorkbench({
                       if (e.key === "ArrowRight") setSplitPosition((p) => Math.min(100, p + 4));
                     }}
                   >
-                    {/* Background Left Image: RGB Composite */}
                     <img
                       src={result.rgb_composite_url}
                       alt="True Color RGB"
                       className="split-img left-img"
                     />
 
-                    {/* Foreground Right Image: Clipped via inset */}
                     <div
                       className="split-right-wrapper"
                       style={{ clipPath: `inset(0 0 0 ${splitPosition}%)` }}
@@ -766,7 +863,6 @@ export default function StudioWorkbench({
                       />
                     </div>
 
-                    {/* Divider Line & Curtain Drag Handle */}
                     <div
                       className="split-divider-line"
                       style={{ left: `${splitPosition}%` }}
@@ -777,7 +873,6 @@ export default function StudioWorkbench({
                       </div>
                     </div>
 
-                    {/* Floating Badges */}
                     <div className="badge-corner top-left">
                       <span className="corner-tag tag-rgb">TRUE COLOR RGB (B4·B3·B2)</span>
                     </div>
@@ -793,7 +888,6 @@ export default function StudioWorkbench({
                   </div>
                 )}
 
-                {/* MODE B: SINGLE VIEW */}
                 {viewerMode === "single" && (
                   <div className="single-view-container">
                     <img
@@ -810,7 +904,6 @@ export default function StudioWorkbench({
                   </div>
                 )}
 
-                {/* MODE C: QUAD GRID MATRIX (2x2) */}
                 {viewerMode === "quad" && (
                   <div className="quad-matrix-grid">
                     {["rgb", "overlay", "mask", "heatmap"].map((id) => (
@@ -834,7 +927,7 @@ export default function StudioWorkbench({
                 )}
               </div>
 
-              {/* Technical Telemetry Footer Strip */}
+              {/* Telemetry Footer */}
               <div className="telemetry-footer-strip">
                 <div className="telemetry-metric">
                   <span className="t-key">CONFIDENCE CUTOFF:</span>

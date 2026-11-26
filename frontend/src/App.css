@@ -597,6 +597,175 @@
   font-family: var(--font-mono);
 }
 
+/* --------------------------------------------------------
+   QUICK-LOAD 1-CLICK SAMPLE SCENES
+   -------------------------------------------------------- */
+.sample-scenes-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sample-scenes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sample-scenes-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.sample-scenes-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.sample-scenes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sample-scene-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  background: rgba(6, 11, 24, 0.7);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.sample-scene-card:hover:not(:disabled) {
+  border-color: var(--border-accent);
+  background: rgba(10, 18, 36, 0.9);
+  transform: translateY(-1px);
+}
+
+.sample-scene-card.active-sample {
+  border-color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.16);
+}
+
+.sample-scene-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sample-thumb-wrap {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #000;
+  flex-shrink: 0;
+}
+
+.sample-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sample-scene-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sample-scene-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sample-scene-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.sample-active-dot {
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  border-radius: 50%;
+  background: var(--status-ok, #10b981);
+  box-shadow: 0 0 6px var(--status-ok, #10b981);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+.sample-scene-meta-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sample-scene-tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  background: rgba(56, 189, 248, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.sample-loading-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent-cyan);
+  white-space: nowrap;
+}
+
+.sample-mini-spinner {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid rgba(56, 189, 248, 0.3);
+  border-top-color: var(--accent-cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
 /* 4 Band Slots Grid (2x2) */
 .band-slots-grid {
   display: grid;
@@ -711,6 +880,94 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Clean GeoTIFF / Mission-Control Raster State */
+.geotiff-preview-state {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  background: rgba(8, 14, 28, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.geotiff-icon-box {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.geotiff-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+.geotiff-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.geotiff-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.geotiff-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--status-ok, #10b981);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.geotiff-status-dot {
+  width: 5px;
+  height: 5px;
+  min-width: 5px;
+  border-radius: 50%;
+  background: var(--status-ok, #10b981);
+  box-shadow: 0 0 6px var(--status-ok, #10b981);
+  display: inline-block;
+  animation: pulse-dot 2.5s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
 }
 
 .slot-raster-icon {
@@ -1904,4 +2161,199 @@
     flex-direction: column;
     gap: 2px;
   }
+}
+
+
+/* =========================================================
+   NAVBAR LIVE DEMO CTA BUTTON
+   ========================================================= */
+.demo-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(6, 182, 212, 0.12));
+  color: #e0f2fe;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.16);
+}
+
+.demo-trigger-btn:hover:not(:disabled) {
+  border-color: rgba(56, 189, 248, 0.85);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.32), rgba(6, 182, 212, 0.22));
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.3);
+  transform: translateY(-1px);
+}
+
+.demo-trigger-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.demo-spin {
+  animation: demo-rotate 1s linear infinite;
+}
+
+@keyframes demo-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* =========================================================
+   NON-BLOCKING 3-STEP GUIDED DEMO COACHBAR
+   ========================================================= */
+.demo-coachbar {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 90;
+  width: min(390px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(11, 17, 29, 0.94);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(56, 189, 248, 0.38);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 28px rgba(56, 189, 248, 0.14);
+  color: #e2e8f0;
+  animation: coachbar-in 0.22s ease-out;
+}
+
+@keyframes coachbar-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.coachbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.coachbar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.coachbar-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: inline-flex;
+}
+
+.coachbar-close:hover {
+  color: #f8fafc;
+  background: rgba(148, 163, 184, 0.14);
+}
+
+.coachbar-title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: #f8fafc;
+}
+
+.coachbar-body {
+  margin: 0 0 14px;
+  font-size: 0.81rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.coachbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.coachbar-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coachbar-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.3);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.coachbar-dot.active {
+  width: 20px;
+  background: #38bdf8;
+}
+
+.coachbar-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coachbar-btn-ghost,
+.coachbar-btn-accent,
+.coachbar-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 8px;
+  font-size: 0.77rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.coachbar-btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #cbd5e1;
+}
+
+.coachbar-btn-ghost:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.coachbar-btn-accent {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #7dd3fc;
+}
+
+.coachbar-btn-accent:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.25);
+}
+
+.coachbar-btn-primary {
+  background: #0ea5e9;
+  border: 1px solid #38bdf8;
+  color: #04101d;
+}
+
+.coachbar-btn-primary:hover:not(:disabled) {
+  background: #38bdf8;
+}
+
+.coachbar-btn-accent:disabled,
+.coachbar-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
